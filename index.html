@@ -129,6 +129,15 @@ main.on{display:block}
 .calc output{font-weight:800;font-variant-numeric:tabular-nums}
 .plat{display:flex;gap:8px}
 .plat .btn[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{font-size:14px;font-weight:700;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
+.trow{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:3.6em 3.2em minmax(0,1fr);gap:8px;align-items:center;padding:12px 14px;border-top:1px solid var(--line);cursor:pointer}
+.trow:first-child{border-top:0}
+.trow:focus-visible{outline:3px solid var(--brand);outline-offset:-3px}
+.tnum{font-weight:800;font-variant-numeric:tabular-nums;color:var(--brand)}
+.trow .lvl{justify-self:start}
+.tname{min-width:0}
 .note{font-size:14px;color:var(--muted);background:var(--brand-soft);border-radius:12px;padding:10px 12px}
 
 /* bottom nav */
@@ -530,8 +539,36 @@ const plat=()=>`<div class="plat" role="group" aria-label="Платформа">
 let OS="android", SHEET="wcag";
 try{OS=localStorage.getItem("os")||"android"}catch(e){}
 
+const TOPICS=[
+ ["Фокус",["2.4.3","2.4.7","2.4.11","2.1.2","3.2.1","2.4.12","2.4.13"]],
+ ["Контраст",["1.4.3","1.4.11","1.4.1","1.4.6"]],
+ ["Озвучка",["1.1.1","1.3.1","1.3.2","4.1.2","4.1.3","2.4.2","2.4.6","2.5.3","3.1.1"]],
+ ["Шрифт и масштаб",["1.4.4","1.4.10","1.4.12","1.4.5","1.3.4"]],
+ ["Кнопки и касания",["2.5.8","2.5.2","2.5.3","2.5.1","2.5.7","2.5.5"]],
+ ["Жесты",["2.5.1","2.5.2","2.5.4","2.5.7"]],
+ ["Формы",["3.3.2","1.3.5","3.3.1","3.3.3","3.2.2","3.3.4","3.3.7"]],
+ ["Ошибки",["3.3.1","3.3.3","3.3.4","1.4.1","4.1.3"]],
+ ["Вход и пароль",["3.3.8","1.3.5","2.2.1","3.3.7"]],
+ ["Картинки и иконки",["1.1.1","1.4.5","1.4.11","2.5.3"]],
+ ["Цвет",["1.4.1","1.4.3","1.4.11"]],
+ ["Навигация",["2.4.2","2.4.3","2.4.4","3.2.3","3.2.4","3.2.6"]],
+ ["Клавиатура",["2.1.1","2.1.2","2.4.3","2.4.7","2.4.11"]],
+ ["Анимация",["2.2.2","2.3.1","2.3.3","2.5.4"]],
+ ["Видео и звук",["1.2.2","1.2.1","1.2.3","1.2.5","1.4.2"]],
+ ["Время",["2.2.1","2.2.6","2.2.2"]]
+];
+let TOPIC="Фокус";
+try{TOPIC=localStorage.getItem("topic")||"Фокус"}catch(e){}
+function topicBox(){
+  const t=TOPICS.find(x=>x[0]===TOPIC)||TOPICS[0];
+  const list=t[1].map(id=>byId[id]).filter(Boolean);
+  return `<div class="chips" role="group" aria-label="Темы">${TOPICS.map(([n])=>`<button data-topic="${n}" aria-pressed="${n===t[0]}">${n}</button>`).join("")}</div>
+  <div class="box" id="topic-list">${list.map(it=>`<button class="trow" data-goto="${it.id}"><span class="tnum">${it.id}</span><span class="lvl ${it.l}">${it.l}</span><span class="tname">${esc(it.ru)}</span></button>`).join("")}</div>
+  <div class="actions"><button class="btn" data-copy="${list.map(i=>i.id).join(", ")}">Копировать все номера</button></div>`;
+}
 const SHEETS={
 wcag:()=>[
+  sec("Быстро по теме",topicBox(),"Нажми тему — получишь номера критериев. Нажми номер — откроется карточка."),
   sec("Уровни",box(
     kv("A","минимум","Без этого часть людей не сможет пользоваться")+
     kv("AA","обычная цель","Этот уровень требуют законы и заказчики")+
@@ -659,8 +696,11 @@ document.addEventListener("click",e=>{
   const c=e.target.closest("[data-copy]"); if(c){copy(c.dataset.copy);return}
   const b=e.target.closest("[data-bug]"); if(b){openBug(b.dataset.bug);return}
   const p=e.target.closest("[data-plat]"); if(p){OS=p.dataset.plat;try{localStorage.setItem("os",OS)}catch(_){}renderSheet();return}
+  const tp=e.target.closest("[data-topic]"); if(tp){TOPIC=tp.dataset.topic;try{localStorage.setItem("topic",TOPIC)}catch(_){}const y=window.scrollY;renderSheet();window.scrollTo(0,y);return}
+  const gt=e.target.closest("[data-goto]"); if(gt){fromSheet=true;go("find");$("q").value=gt.dataset.goto;render();return}
   if(e.target.id==="aaa"){showAAA=!showAAA;render()}
 });
+let fromSheet=false;
 
 /* ---------- вкладки и переходы ---------- */
 const TITLES={find:"Найти критерий",contrast:"Проверка контраста",sheets:"Шпаргалки"};
@@ -674,7 +714,7 @@ function go(tab,sheet){
   if(tab==="sheets"){if(sheet)SHEET=sheet;renderSheet()}
   window.scrollTo(0,0);
 }
-document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b)go(b.dataset.tab)});
+document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){fromSheet=false;go(b.dataset.tab)}});
 // Ярлыки: #contrast, #sr, #zoom, #wcag, #find
 window.route=function(r){
   r=(r||"").replace("#","");
@@ -686,6 +726,7 @@ window.route=function(r){
 window.goBack=function(){
   if(!$("bug").hidden){closeBug();return true}
   if(TAB!=="find"){go("find");return true}
+  if(fromSheet){fromSheet=false;$("q").value="";render();go("sheets");return true}
   const open=document.querySelector(".card.open"); if(open&&document.querySelectorAll(".card").length>1){toggleCard(open,false);return true}
   if($("q").value){$("q").value="";render();window.scrollTo(0,0);return true}
   return false;

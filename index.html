@@ -1,107 +1,225 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#5b4bd6">
-<meta name="description" content="Поиск критериев WCAG 2.2 и проверка контраста">
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5b4bd6">
+<meta name="description" content="Карманный помощник QA по доступности: WCAG 2.2, баг-репорты, TalkBack, VoiceOver, контраст">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<title>WCAG Справочник</title>
-
-
+<title>WCAG помощник</title>
 <style>
-/* Layout: colored header band with search, simple card list below */
+/* Layout: brand header with context controls, scrolling content, fixed bottom tab bar */
 :root{
-  --bg:#f6f4fb; --surface:#ffffff; --fg:#1d1a2e; --muted:#5f5a75; --line:#e3dff0;
+  --bg:#f6f4fb; --surface:#ffffff; --sunk:#efecf8; --fg:#1d1a2e; --muted:#5f5a75; --line:#e3dff0;
   --brand:#5b4bd6; --brand-soft:#ece9fd; --on-brand:#ffffff;
   --a:#15803d; --a-bg:#dcfce7; --aa:#4338ca; --aa-bg:#e0e7ff; --aaa:#a21caf; --aaa-bg:#fae8ff;
-  --ok:#15803d; --bad:#c2410c;
+  --bad:#c2410c; --bad-bg:#ffedd5;
   --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"Roboto Mono","SFMono-Regular",monospace;
+  --nav-h:64px;
+  color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#14121d; --surface:#1f1c2c; --fg:#ecebf5; --muted:#a8a3c0; --line:#322e45;
+  --bg:#14121d; --surface:#1f1c2c; --sunk:#191624; --fg:#ecebf5; --muted:#a8a3c0; --line:#322e45;
   --brand:#8f82f5; --brand-soft:#2a2547; --on-brand:#14121d;
   --a:#86efac; --a-bg:#173524; --aa:#a5b4fc; --aa-bg:#262b55; --aaa:#f0abfc; --aaa-bg:#3d1e45;
-  --ok:#86efac; --bad:#fdba74; color-scheme:dark }}
+  --bad:#fdba74; --bad-bg:#3a2414; color-scheme:dark }}
 :root[data-theme="dark"]{
-  --bg:#14121d; --surface:#1f1c2c; --fg:#ecebf5; --muted:#a8a3c0; --line:#322e45;
+  --bg:#14121d; --surface:#1f1c2c; --sunk:#191624; --fg:#ecebf5; --muted:#a8a3c0; --line:#322e45;
   --brand:#8f82f5; --brand-soft:#2a2547; --on-brand:#14121d;
   --a:#86efac; --a-bg:#173524; --aa:#a5b4fc; --aa-bg:#262b55; --aaa:#f0abfc; --aaa-bg:#3d1e45;
-  --ok:#86efac; --bad:#fdba74; color-scheme:dark }
+  --bad:#fdba74; --bad-bg:#3a2414; color-scheme:dark }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.45}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--brand)}
-.in{max-width:600px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit}
+.in{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+
+/* header */
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--brand);color:var(--on-brand);border-radius:0 0 22px 22px}
-header .in{padding-block:14px 16px;display:grid;gap:12px}
-.bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
-h1{margin:0;font-size:19px;font-weight:800}
-.seg{display:flex;background:color-mix(in srgb,var(--on-brand) 18%,transparent);border-radius:999px;padding:3px}
-.seg button{font:inherit;font-size:14px;font-weight:700;border:0;border-radius:999px;padding:7px 14px;background:transparent;color:var(--on-brand);cursor:pointer}
-.seg button[aria-selected="true"]{background:var(--surface);color:var(--brand)}
-#q{width:100%;font:inherit;font-size:18px;font-weight:600;padding:14px 16px;border:0;border-radius:14px;background:var(--surface);color:var(--fg)}
+header .in{padding-block:14px 14px;display:grid;gap:12px}
+h1{margin:0;font-size:20px;font-weight:800}
+#q{width:100%;font:inherit;font-size:18px;font-weight:600;padding:13px 16px;border:0;border-radius:14px;background:var(--surface);color:var(--fg)}
 #q::placeholder{color:var(--muted);font-weight:500}
 #q:focus{outline:3px solid color-mix(in srgb,var(--on-brand) 70%,transparent);outline-offset:2px}
-.tags{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-inline:-2px;padding-inline:2px}
-.tags button{flex:none;font:inherit;font-size:14px;font-weight:600;padding:6px 12px;border-radius:999px;border:0;background:color-mix(in srgb,var(--on-brand) 18%,transparent);color:var(--on-brand);cursor:pointer}
-main .in{padding-block:14px 40px;display:grid;gap:10px}
-.card{background:var(--surface);border-radius:16px;padding:14px 16px;display:grid;gap:6px;border:1px solid var(--line)}
+.tags{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.tags::-webkit-scrollbar{display:none}
+.tags button,.seg button{flex:none;font-size:14px;font-weight:700;padding:7px 13px;border-radius:999px;border:0;background:color-mix(in srgb,var(--on-brand) 18%,transparent);color:var(--on-brand);cursor:pointer}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--brand)}
+
+/* content */
+main{display:none}
+main.on{display:block}
+.list{display:grid;gap:10px;padding-block:14px 24px}
+.card{background:var(--surface);border-radius:16px;border:1px solid var(--line);overflow:hidden}
+.card>button.sum{all:unset;box-sizing:border-box;display:grid;gap:4px;width:100%;padding:14px 16px;cursor:pointer}
+.card>button.sum:focus-visible{outline:3px solid var(--brand);outline-offset:-3px;border-radius:16px}
 .head{display:flex;align-items:center;gap:10px}
-.num{font:inherit;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--brand);background:none;border:0;padding:0;cursor:pointer}
-.lvl{font-size:13px;font-weight:800;padding:3px 9px;border-radius:8px}
+.num{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--brand)}
+.lvl{font-size:12px;font-weight:800;padding:3px 8px;border-radius:7px}
 .lvl.A{color:var(--a);background:var(--a-bg)} .lvl.AA{color:var(--aa);background:var(--aa-bg)} .lvl.AAA{color:var(--aaa);background:var(--aaa-bg)}
-.copy{margin-left:auto;font:inherit;font-size:13px;font-weight:700;color:var(--brand);background:var(--brand-soft);border:0;border-radius:10px;padding:7px 11px;cursor:pointer}
-.name{margin:0;font-size:17px;font-weight:700;text-wrap:balance}
-.how{margin:0;color:var(--muted)}
-.droid{margin:0;font-size:14px;color:var(--muted)}
+.chev{margin-left:auto;width:22px;height:22px;flex:none;display:block;color:var(--muted);transition:transform .15s}
+.card.open .chev{transform:rotate(180deg)}
+.name{font-size:17px;font-weight:700;text-wrap:balance}
+.how{color:var(--muted)}
+.det{display:none;padding:0 16px 16px;gap:12px}
+.card.open .det{display:grid}
+.label{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.steps{margin:0;padding-left:22px;display:grid;gap:4px}
+.bugex{background:var(--bad-bg);color:var(--fg);border-radius:12px;padding:10px 12px}
+.bugex .label{color:var(--bad)}
+.droid{font-size:14px;color:var(--muted);margin:0}
 .droid b{color:var(--fg)}
-.more{display:flex;justify-content:center;gap:12px;align-items:center;color:var(--muted);font-size:14px;padding-top:4px}
-.more button{font:inherit;font-weight:700;color:var(--brand);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font-size:14px;font-weight:700;border:0;border-radius:12px;padding:10px 14px;cursor:pointer;background:var(--brand-soft);color:var(--brand);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.primary{background:var(--brand);color:var(--on-brand)}
+.more{display:flex;justify-content:center;gap:10px;align-items:center;color:var(--muted);font-size:14px}
+.more button{font-weight:700;color:var(--brand);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:8px}
 .empty{text-align:center;color:var(--muted);padding:30px 8px}
-:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+
 /* contrast */
+.cwrap{display:grid;gap:12px;padding-block:14px 24px}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field{display:grid;gap:6px;font-size:14px;font-weight:700;color:var(--muted)}
-.field div{display:flex;gap:6px;align-items:center}
-.field input[type=text]{min-width:0;flex:1;font:inherit;font-size:16px;color:var(--fg);padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
-.field input[type=color]{flex:none;width:44px;height:44px;padding:0;border:1px solid var(--line);border-radius:12px;background:none}
+.field>div{display:flex;gap:6px;align-items:center}
+.field input[type=text],.field textarea,.field input.t{min-width:0;flex:1;width:100%;font:inherit;font-size:16px;color:var(--fg);padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.field textarea{resize:vertical;min-height:72px}
+.field input[type=color]{flex:none;width:46px;height:46px;padding:0;border:1px solid var(--line);border-radius:12px;background:none}
 .preview{border-radius:16px;padding:18px;border:1px solid var(--line);display:grid;gap:4px}
-.preview .ratio{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
-.preview .small{font-size:15px}
+.preview .ratio{font-size:46px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
 .row small{color:var(--muted)}
-.pill{font-size:13px;font-weight:800;padding:3px 10px;border-radius:999px}
-.pill.pass{color:var(--a);background:var(--a-bg)} .pill.fail{color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,transparent)}
-.swap{justify-self:start;font:inherit;font-weight:700;font-size:14px;color:var(--brand);background:var(--brand-soft);border:0;border-radius:10px;padding:8px 12px;cursor:pointer}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:12px;font-size:14px;font-weight:600;z-index:20}
-</style>
+.pill{font-size:13px;font-weight:800;padding:3px 10px;border-radius:999px;flex:none}
+.pill.pass{color:var(--a);background:var(--a-bg)} .pill.fail{color:var(--bad);background:var(--bad-bg)}
 
-</head><body><header>
+/* sheets */
+.sheet{display:grid;gap:18px;padding-block:16px 24px}
+.sec{display:grid;gap:8px}
+.sec h2{margin:0;font-size:18px;font-weight:800}
+.sec p{margin:0;color:var(--muted)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 14px;border-top:1px solid var(--line)}
+.kv:first-child{border-top:0}
+.kv .k{min-width:0}
+.kv .k small{display:block;color:var(--muted);font-size:13px}
+.kv .v{font-weight:800;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.gest{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:11px 14px;border-top:1px solid var(--line)}
+.gest:first-child{border-top:0}
+.gest b{font-weight:700}
+.gest span{color:var(--muted)}
+.cmd{display:grid;gap:6px;padding:11px 14px;border-top:1px solid var(--line)}
+.cmd:first-child{border-top:0}
+.cmd code{font-family:var(--mono);font-size:13px;background:var(--sunk);border-radius:8px;padding:8px 10px;overflow-x:auto;white-space:pre;display:block}
+.cmd .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.cmd .top button{flex:none}
+.check{margin:0;padding:12px 14px 12px 36px;display:grid;gap:6px}
+.path{font-size:15px;padding:11px 14px;border-top:1px solid var(--line)}
+.path:first-child{border-top:0}
+.path b{display:block}
+.path span{color:var(--muted)}
+.calc{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 14px}
+.calc input,.calc select{font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);width:92px}
+.calc select{width:auto}
+.calc output{font-weight:800;font-variant-numeric:tabular-nums}
+.plat{display:flex;gap:8px}
+.plat .btn[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
+.note{font-size:14px;color:var(--muted);background:var(--brand-soft);border-radius:12px;padding:10px 12px}
+
+/* bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .in{display:grid;grid-template-columns:repeat(3,1fr);height:var(--nav-h)}
+nav.tabs button{border:0;background:none;display:grid;place-items:center;align-content:center;gap:2px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button .ic{padding:3px 18px;border-radius:999px}
+nav.tabs button[aria-selected="true"]{color:var(--brand)}
+nav.tabs button[aria-selected="true"] .ic{background:var(--brand-soft)}
+
+/* bug sheet */
+.scrim{position:fixed;inset:0;z-index:20;background:rgb(0 0 0 / .45);display:flex;align-items:flex-end;justify-content:center}
+.bsheet{background:var(--bg);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:22px 22px 0 0;padding:8px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:grid;gap:12px}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line);justify-self:center}
+.bsheet h2{margin:0;font-size:19px;font-weight:800}
+.sev{display:flex;gap:6px;flex-wrap:wrap}
+.sev button{font-size:14px;font-weight:700;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.sev button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
+.sevhint{font-size:13px;color:var(--muted);margin:0}
+pre.out{margin:0;font-family:var(--mono);font-size:13px;white-space:pre-wrap;word-break:break-word;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:reduce){.chev{transition:none}}
+</style>
+</head>
+<body>
+
+<header>
   <div class="in">
-    <div class="bar">
-      <h1>WCAG помощник</h1>
-      <div class="seg" role="tablist">
-        <button role="tab" id="t1" aria-selected="true">Поиск</button>
-        <button role="tab" id="t2" aria-selected="false">Контраст</button>
-      </div>
-    </div>
-    <div id="sbox" style="display:grid;gap:10px">
-      <input id="q" type="search" placeholder="Например: контраст" autocomplete="off" enterkeyhint="search" aria-label="Что проверяете?">
+    <h1 id="title">Найти критерий</h1>
+    <div id="hd-find" style="display:grid;gap:10px">
+      <input id="q" type="search" placeholder="Например: контраст или 2.5.8" autocomplete="off" enterkeyhint="search" aria-label="Поиск критерия WCAG">
       <div class="tags" id="tags"></div>
+    </div>
+    <div id="hd-sheets" class="seg" hidden>
+      <button data-s="wcag" aria-pressed="true">WCAG</button>
+      <button data-s="sr" aria-pressed="false">Озвучка</button>
+      <button data-s="zoom" aria-pressed="false">Приближение</button>
     </div>
   </div>
 </header>
 
-<main id="p1"><div class="in" id="list" aria-live="polite"></div></main>
+<main id="p-find" class="on"><div class="in list" id="list" aria-live="polite"></div></main>
 
-<main id="p2" hidden><div class="in">
+<main id="p-contrast"><div class="in cwrap">
   <div class="pair">
-    <label class="field">Текст<div><input type="color" id="fgc" value="#767676" aria-label="Цвет текста"><input type="text" id="fg" value="#767676" spellcheck="false"></div></label>
-    <label class="field">Фон<div><input type="color" id="bgc" value="#ffffff" aria-label="Цвет фона"><input type="text" id="bg" value="#ffffff" spellcheck="false"></div></label>
+    <label class="field">Текст<div><input type="color" id="fgc" value="#767676" aria-label="Выбрать цвет текста"><input type="text" id="fg" value="#767676" spellcheck="false" autocapitalize="off"></div></label>
+    <label class="field">Фон<div><input type="color" id="bgc" value="#ffffff" aria-label="Выбрать цвет фона"><input type="text" id="bg" value="#ffffff" spellcheck="false" autocapitalize="off"></div></label>
   </div>
-  <button class="swap" id="swap">⇅ Поменять</button>
-  <div class="preview" id="prev"><span class="ratio" id="ratio">4.54:1</span><span>Пример текста</span><span class="small">Мелкий текст для проверки</span></div>
+  <div class="actions"><button class="btn" id="swap">⇅ Поменять местами</button></div>
+  <div class="preview" id="prev"><span class="ratio" id="ratio">4.54:1</span><span>Пример обычного текста</span><span style="font-size:24px;font-weight:700">Крупный текст</span></div>
   <div id="res" style="display:grid;gap:8px"></div>
+  <p class="note">Крупный текст — от 18pt (≈ 24sp) или от 14pt жирным (≈ 18.7sp). Неактивные элементы и логотипы требованию не подлежат.</p>
 </div></main>
 
-<div class="toast" id="toast" hidden></div>
+<main id="p-sheets"><div class="in" id="sheet"></div></main>
+
+<nav class="tabs" aria-label="Разделы">
+  <div class="in" role="tablist">
+    <button role="tab" data-tab="find" aria-selected="true"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>Найти</button>
+    <button role="tab" data-tab="contrast" aria-selected="false"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></span>Контраст</button>
+    <button role="tab" data-tab="sheets" aria-selected="false"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6M9 18h3"/></svg></span>Шпаргалки</button>
+  </div>
+</nav>
+
+<div class="scrim" id="bug" hidden>
+  <div class="bsheet" role="dialog" aria-modal="true" aria-labelledby="bug-h">
+    <div class="grab"></div>
+    <h2 id="bug-h">Баг-репорт</h2>
+    <label class="field">Где (экран и элемент)<input class="t" id="b-where" placeholder="Экран «Корзина», кнопка «Удалить»"></label>
+    <label class="field">Что не так (фактический результат)<textarea id="b-fact"></textarea></label>
+    <label class="field">Шаги воспроизведения<textarea id="b-steps"></textarea></label>
+    <div class="field">Критичность
+      <div class="sev" id="b-sev">
+        <button data-v="Блокер" aria-pressed="false">Блокер</button>
+        <button data-v="Высокая" aria-pressed="true">Высокая</button>
+        <button data-v="Средняя" aria-pressed="false">Средняя</button>
+        <button data-v="Низкая" aria-pressed="false">Низкая</button>
+      </div>
+      <p class="sevhint" id="b-sevhint"></p>
+    </div>
+    <div class="field">Готовый текст<pre class="out" id="b-out"></pre></div>
+    <div class="actions">
+      <button class="btn primary" id="b-copy">Копировать</button>
+      <button class="btn" id="b-share">Поделиться</button>
+      <button class="btn" id="b-close">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
 
 <script>
 const D=[
@@ -192,12 +310,95 @@ const D=[
 ["4.1.2","A","Имя, роль, значение","Name, Role, Value","имя роль состояние значение кастомный компонент чекбокс переключатель aria скринридер talkback","У элементов есть доступное имя, роль и состояние (выбран, развернут).","className/roleDescription, stateDescription, AccessibilityNodeInfo"],
 ["4.1.3","AA","Статусные сообщения","Status Messages","статус уведомление тост снекбар live region объявление загрузка","Статусные сообщения объявляются без переноса фокуса.","accessibilityLiveRegion, announceForAccessibility"]
 ];
-const QUICK=["контраст","фокус","alt","кнопка","размер","ошибка","форма","анимация","видео","talkback"];
-const norm=s=>s.toLowerCase().replace(/ё/g,"е");
-const items=D.map(r=>({id:r[0],l:r[1],ru:r[2],en:r[3],kw:r[4],how:r[5],droid:r[6],hay:norm(r.join(" "))}));
+// Как проверить (шаги) и типичный баг. Ключ — номер критерия.
+const T={
+"1.1.1":[["Включи TalkBack","Пройди свайпами вправо по всем иконкам, картинкам и кнопкам-иконкам","У значимых элементов понятное имя: «Поиск», а не «image» или «кнопка»","Декоративные картинки не озвучиваются вовсе"],"Кнопка-иконка корзины озвучивается как «Кнопка, без метки»"],
+"1.2.1":[["Найди аудио без видео и видео без звука","Проверь, что рядом есть расшифровка или текстовое описание"],"У подкаста нет текстовой расшифровки"],
+"1.2.2":[["Запусти видео со звуком","Включи субтитры: они есть, совпадают по времени и передают важные звуки"],"В обучающем видео нет субтитров"],
+"1.2.3":[["Посмотри видео без звука и без картинки","Важное, что видно только на экране, передано голосом или текстом"],"В видео-инструкции шаги показаны только на экране, голосом не описаны"],
+"1.2.4":[["Открой прямую трансляцию","Проверь наличие субтитров в реальном времени"],"В эфире нет субтитров"],
+"1.2.5":[["Посмотри видео, закрыв экран","Всё важное визуальное описано голосом"],"Текст на слайдах в видео не озвучивается"],
+"1.3.1":[["Включи TalkBack","Заголовки озвучиваются со словом «заголовок»","Свайпом вверх/вниз выбери режим «Заголовки» и перемещайся по ним","Поле ввода озвучивает свою подпись, список — «в списке, N элементов»"],"Заголовки разделов не размечены — навигация по заголовкам не работает"],
+"1.3.2":[["Включи TalkBack, поставь фокус в начало экрана","Свайпами вправо пройди до конца","Порядок озвучки совпадает со смыслом и визуальным порядком"],"После заголовка фокус уходит в нижнюю панель и только потом возвращается к контенту"],
+"1.3.3":[["Прочитай все подсказки и инструкции на экране","Нет указаний только по цвету, форме или положению: «нажмите справа», «зелёная кнопка»"],"Подсказка «Нажмите круглую кнопку справа» без названия кнопки"],
+"1.3.4":[["Включи автоповорот","Поверни телефон на каждом экране","Экран поворачивается и ничего не теряется"],"Экран оплаты заблокирован в портретной ориентации"],
+"1.3.5":[["Открой формы с именем, телефоном, email, адресом","Поля предлагают автозаполнение","Открывается подходящая клавиатура (цифры для телефона, @ для email)"],"Поле email не предлагает автозаполнение"],
+"1.4.1":[["Найди ошибки, статусы, ссылки, графики","Информация передана не только цветом: есть текст, иконка или подчёркивание","Удобно проверять в режиме «Оттенки серого» (Спец. возможности → Цвет и движение)"],"Поле с ошибкой выделено только красной рамкой, текста ошибки нет"],
+"1.4.2":[["Открой экраны, где звук включается сам","Звук дольше 3 секунд можно остановить или убавить"],"Фоновое видео на главной играет со звуком, выключить нельзя"],
+"1.4.3":[["Сделай скриншот экрана","Измерь цвет текста и фона (вкладка «Контраст»)","Обычный текст ≥ 4.5:1, крупный ≥ 3:1","Не забудь плейсхолдеры, подписи под полями, текст на картинках и кнопках"],"Плейсхолдер #A0A0A0 на белом фоне — 2.6:1"],
+"1.4.4":[["Поставь максимальный размер шрифта (или ADB: font_scale 2.0)","Пройди все экраны","Текст не обрезан, не перекрывается, нет «…» с потерей смысла"],"При крупном шрифте текст кнопки обрезается до «Продол…»"],
+"1.4.5":[["Найди баннеры и кнопки с текстом","Увеличь шрифт: текст-картинка не растёт и TalkBack его не читает"],"Текст акции нарисован на баннере и не читается TalkBack"],
+"1.4.10":[["Поставь крупный шрифт и максимальный масштаб изображения","Контент помещается без прокрутки по горизонтали (кроме карт и таблиц)"],"Карточка товара уезжает за край экрана при масштабе 200%"],
+"1.4.11":[["Измерь контраст границ полей, иконок, переключателей, чекбоксов к фону","Нужно ≥ 3:1","Проверь все состояния: включено, выключено, выбрано"],"Граница поля #E0E0E0 на белом — 1.3:1, поле не видно"],
+"1.4.12":[["Актуально для веб-экранов и WebView","Увеличь интервалы букмарклетом Text Spacing","Текст не обрезается и не налезает"],"В WebView-экране оферты строки накладываются друг на друга"],
+"1.4.13":[["Вызови подсказки и всплывающие окна (долгое нажатие, фокус)","Их можно закрыть, не убирая фокус","Они не исчезают сами, пока пользователь их читает"],"Подсказка к полю пропадает через 2 секунды, TalkBack не успевает её прочитать"],
+"2.1.1":[["Подключи Bluetooth-клавиатуру (или включи Switch Access)","Tab и стрелками дойди до каждого элемента","Enter или пробел активирует элемент"],"Кастомный переключатель недоступен с клавиатуры"],
+"2.1.2":[["Пройди экран клавиатурой и TalkBack, включая диалоги, карты, WebView","Из любого элемента фокус можно увести"],"Фокус застревает внутри карты, выйти нельзя"],
+"2.2.1":[["Найди таймеры: сессия, код из SMS, бронь","Есть предупреждение и можно продлить время"],"Сессия оплаты завершается через 2 минуты без предупреждения"],
+"2.2.2":[["Найди карусели, автопрокрутку, бегущие строки","Движение дольше 5 секунд можно поставить на паузу"],"Баннер-карусель на главной листается сама, паузы нет"],
+"2.3.1":[["Проверь анимации и видео","Нет вспышек чаще 3 раз в секунду"],"Анимация успеха мигает 5 раз в секунду"],
+"2.4.2":[["Включи TalkBack","Открой каждый экран: TalkBack объявляет его название"],"При переходе в «Корзину» TalkBack ничего не объявляет"],
+"2.4.3":[["Пройди экран TalkBack или клавиатурой","Порядок фокуса логичный","Открыл диалог — фокус внутри него; закрыл — фокус вернулся на кнопку, которая его открыла"],"После закрытия нижнего листа фокус прыгает в начало экрана"],
+"2.4.4":[["Найди ссылки и кнопки «Подробнее», «Тут», «Ещё»","По имени или ближайшему контексту понятно, куда они ведут"],"Три кнопки «Подробнее» в списке озвучиваются одинаково"],
+"2.4.6":[["Прочитай заголовки и подписи полей","Они описывают суть: «Номер карты», а не «Поле 1»"],"Поле подписано «Значение»"],
+"2.4.7":[["Подключи клавиатуру, пройди Tab по экрану","На каждом элементе виден индикатор фокуса"],"При навигации с клавиатуры не видно, какая кнопка в фокусе"],
+"2.4.11":[["Пройди экран клавиатурой","Элемент в фокусе не прячется под липкой кнопкой, нижней панелью или клавиатурой"],"Поле в фокусе скрыто под липкой кнопкой «Оплатить»"],
+"2.5.1":[["Найди свайпы, щипки, жесты двумя пальцами","У каждого есть альтернатива обычным касанием"],"Удалить элемент можно только свайпом влево"],
+"2.5.2":[["Коснись кнопки и, не отпуская, уведи палец","Действие не сработало"],"Покупка срабатывает в момент касания, отменить нельзя"],
+"2.5.3":[["Сравни видимый текст и озвучку TalkBack","Имя начинается с видимого текста","Проверь Voice Access: «Нажать <видимый текст>»"],"Кнопка «Отправить» озвучивается как «Submit»"],
+"2.5.4":[["Найди функции по встряхиванию или наклону","Есть альтернатива кнопкой, и жест можно отключить"],"«Встряхните, чтобы отправить отзыв» — другого способа нет"],
+"2.5.7":[["Найди слайдеры, перетаскивание, сортировку","Есть способ без перетаскивания: кнопки, тап"],"Сортировка списка только перетаскиванием"],
+"2.5.8":[["Включи Accessibility Scanner или измерь на скриншоте","Цели касания ≥ 24×24 px (рекомендация Android — 48×48 dp)","Маленькие цели должны иметь достаточный отступ от соседних"],"Иконка закрытия 16×16 dp стоит вплотную к кнопке «Удалить»"],
+"3.1.1":[["Включи TalkBack","Текст читается голосом нужного языка"],"Русский интерфейс TalkBack читает английским голосом"],
+"3.1.2":[["Найди фрагменты на другом языке","TalkBack произносит их правильным голосом"],"Английские названия тарифов читаются русским голосом"],
+"3.2.1":[["Перемещай фокус TalkBack и клавиатурой","От одной фокусировки ничего не открывается и не отправляется"],"При фокусе на поле сразу открывается новый экран"],
+"3.2.2":[["Меняй значения в списках, переключателях, полях","Экран не меняется неожиданно без предупреждения"],"Выбор города в списке сразу переносит на другой экран"],
+"3.2.3":[["Сравни навигацию на разных экранах","Повторяющиеся меню в одном и том же порядке"],"Пункты нижней панели меняются местами на разных экранах"],
+"3.2.4":[["Найди одинаковые функции на разных экранах","Они называются и выглядят одинаково"],"Кнопка «Поделиться» на одном экране озвучивается «Отправить»"],
+"3.2.6":[["Найди чат поддержки, телефон, справку","На всех экранах они в одном месте"],"Кнопка чата поддержки то вверху, то внизу экрана"],
+"3.3.1":[["Отправь форму с ошибками","Ошибка описана текстом рядом с полем","TalkBack объявляет ошибку"],"Ошибка показана только красной рамкой, TalkBack её не объявляет"],
+"3.3.2":[["У каждого поля есть видимая подпись, не только плейсхолдер","Указан формат: дата, телефон, требования к паролю"],"Поле даты без подписи; плейсхолдер исчезает при вводе"],
+"3.3.3":[["Вызови ошибки в форме","Сообщение подсказывает, как исправить"],"«Неверный формат» без примера правильного формата"],
+"3.3.4":[["Проверь оплату, перевод, удаление аккаунта","Есть подтверждение, проверка данных или отмена"],"Перевод отправляется сразу, без экрана подтверждения"],
+"3.3.7":[["Пройди многошаговые формы","Введённые данные не нужно вводить повторно"],"Адрес доставки нужно вводить заново на шаге оплаты"],
+"3.3.8":[["Открой вход и регистрацию","Вставка пароля и кода работает","Работает менеджер паролей и автоподстановка кода из SMS"],"В поле пароля запрещена вставка"],
+"4.1.2":[["Включи TalkBack","Каждый элемент озвучивает имя, роль («кнопка», «переключатель», «флажок») и состояние («включено», «выбрано», «развёрнуто»)","Состояние озвучивается и после изменения"],"Кастомный переключатель озвучивается без роли и состояния"],
+"4.1.3":[["Вызови тосты, снекбары, «Добавлено в корзину», загрузку","TalkBack объявляет их, фокус при этом не прыгает"],"Сообщение «Товар добавлен» не озвучивается"]
+};
+
+
+/* ---------- платформа ---------- */
+const NATIVE = typeof window.AndroidApp !== "undefined";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm = s => s.toLowerCase().replace(/ё/g, "е");
+const slug = en => en.toLowerCase().replace(/[(),]/g, "").replace(/\s+/g, "-");
+
+let tt;
+function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,1600)}
+function copy(txt, msg){
+  const done=()=>toast(msg||"Скопировано");
+  if(NATIVE){try{AndroidApp.copy(txt);done();return}catch(e){}}
+  const fb=()=>{const a=document.createElement("textarea");a.value=txt;a.setAttribute("readonly","");a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy");done()}catch(e){toast("Не удалось скопировать")}a.remove()};
+  if(navigator.clipboard)navigator.clipboard.writeText(txt).then(done).catch(fb);else fb();
+}
+function share(txt){
+  if(NATIVE){try{AndroidApp.share(txt);return}catch(e){}}
+  if(navigator.share)navigator.share({text:txt}).catch(()=>{});else copy(txt,"Скопировано — вставь куда нужно");
+}
+function device(){
+  if(NATIVE){try{return AndroidApp.device()}catch(e){}}
+  const ua=navigator.userAgent, m=ua.match(/Android ([\d.]+);\s*([^;)]+)/);
+  if(m) return m[2].trim()+", Android "+m[1];
+  if(/iPhone|iPad/.test(ua)){const v=ua.match(/OS ([\d_]+)/);return "iPhone, iOS "+(v?v[1].replace(/_/g,"."):"")}
+  return "Устройство: указать";
+}
+
+/* ---------- поиск ---------- */
+const items=D.map(r=>({id:r[0],l:r[1],ru:r[2],en:r[3],kw:r[4],how:r[5],droid:r[6],t:T[r[0]],hay:norm([r[0],r[2],r[3],r[4],r[5],r[6]||""].join(" "))}));
+const byId=Object.fromEntries(items.map(i=>[i.id,i]));
 let showAAA=false;
-const $=id=>document.getElementById(id),q=$("q"),list=$("list");
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const QUICK=["контраст","talkback","кнопка","размер","фокус","шрифт","ошибка","форма","жесты","анимация"];
 
 function score(it,tokens){
   let s=0;
@@ -211,57 +412,288 @@ function score(it,tokens){
   }
   return s;
 }
+const chev='<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+function card(it){
+  const t=it.t;
+  return `<article class="card" data-id="${it.id}">
+    <button class="sum" aria-expanded="false">
+      <span class="head"><span class="num">${it.id}</span><span class="lvl ${it.l}">${it.l}</span>${chev}</span>
+      <span class="name">${esc(it.ru)}</span>
+      <span class="how">${esc(it.how)}</span>
+    </button>
+    <div class="det">
+      ${t?`<div><p class="label">Как проверить</p><ol class="steps">${t[0].map(s=>`<li>${esc(s)}</li>`).join("")}</ol></div>`:""}
+      ${it.droid?`<p class="droid"><b>Android:</b> ${esc(it.droid)}</p>`:""}
+      ${t?`<div class="bugex"><p class="label">Типичный баг</p>${esc(t[1])}</div>`:""}
+      <div class="actions">
+        <button class="btn primary" data-bug="${it.id}">Завести баг</button>
+        <button class="btn" data-copy="WCAG ${it.id} ${esc(it.en)} (${it.l})">Копировать номер</button>
+        <a class="btn" href="https://www.w3.org/WAI/WCAG22/Understanding/${slug(it.en)}" target="_blank" rel="noopener">W3C ↗</a>
+      </div>
+    </div>
+  </article>`;
+}
 function render(){
-  const tokens=norm(q.value).trim().split(/[\s,]+/).filter(Boolean);
+  const q=$("q").value, tokens=norm(q).trim().split(/[\s,]+/).filter(Boolean);
   let res=items;
   if(tokens.length) res=items.map(it=>[it,score(it,tokens)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
-  const hidden=showAAA?0:res.filter(i=>i.l==="AAA").length;
-  if(!showAAA) res=res.filter(i=>i.l!=="AAA");
-  let html=res.map(it=>`<article class="card">
-    <div class="head"><span class="num">${it.id}</span><span class="lvl ${it.l}">${it.l}</span><button class="copy" data-copy="WCAG ${it.id} ${esc(it.en)} (${it.l})" aria-label="Скопировать ${it.id}">Копировать</button></div>
-    <h2 class="name">${esc(it.ru)}</h2>
-    <p class="how">${esc(it.how)}</p>
-    ${it.droid?`<p class="droid"><b>Android:</b> ${esc(it.droid)}</p>`:""}
-  </article>`).join("");
-  if(!res.length) html=`<p class="empty">Ничего не нашлось. Попробуйте другое слово.</p>`;
+  const exact=tokens.length===1&&byId[tokens[0]];
+  const hidden=(showAAA||exact)?0:res.filter(i=>i.l==="AAA").length;
+  if(!showAAA&&!exact) res=res.filter(i=>i.l!=="AAA");
+  let html=res.map(card).join("");
+  if(!res.length) html=`<p class="empty">Ничего не нашлось. Попробуй другое слово или номер критерия.</p>`;
   if(hidden) html+=`<div class="more">Ещё ${hidden} уровня AAA <button id="aaa">Показать</button></div>`;
   else if(showAAA) html+=`<div class="more"><button id="aaa">Скрыть AAA</button></div>`;
-  list.innerHTML=html;
+  $("list").innerHTML=html;
+  if(res.length===1) toggleCard($("list").querySelector(".card"),true);
 }
-let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,1500)}
-function copy(txt){
-  const done=()=>toast("Скопировано: "+txt);
-  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(txt,done)); else fallback(txt,done);
+function toggleCard(c,force){
+  const open=force!==undefined?force:!c.classList.contains("open");
+  c.classList.toggle("open",open);
+  c.querySelector(".sum").setAttribute("aria-expanded",open);
 }
-function fallback(txt,done){const a=document.createElement("textarea");a.value=txt;document.body.appendChild(a);a.select();try{document.execCommand("copy");done()}catch(e){toast(txt)}a.remove()}
-document.addEventListener("click",e=>{
-  const b=e.target.closest("[data-copy]");if(b)copy(b.dataset.copy);
-  if(e.target.id==="aaa"){showAAA=!showAAA;render()}
-});
-q.addEventListener("input",render);
+$("q").addEventListener("input",render);
 $("tags").innerHTML=QUICK.map(w=>`<button>${w}</button>`).join("");
-$("tags").onclick=e=>{if(e.target.tagName==="BUTTON"){q.value=e.target.textContent;render()}};
-function tab(n){const a=n===1;$("t1").setAttribute("aria-selected",a);$("t2").setAttribute("aria-selected",!a);$("p1").hidden=!a;$("sbox").hidden=!a;$("p2").hidden=a}
-$("t1").onclick=()=>tab(1);$("t2").onclick=()=>tab(2);
+$("tags").addEventListener("click",e=>{if(e.target.tagName==="BUTTON"){$("q").value=e.target.textContent;render();window.scrollTo(0,0)}});
 
+/* ---------- баг-репорт ---------- */
+const SEV={"Блокер":"Пользователь не может выполнить задачу (например, оплатить с TalkBack).","Высокая":"Задачу выполнить очень трудно, обходной путь неочевиден.","Средняя":"Неудобно, но есть понятный обходной путь.","Низкая":"Мелкая неточность, на выполнение задачи не влияет."};
+let bugIt=null, sev="Высокая", lastFocus=null;
+function openBug(id){
+  bugIt=byId[id]; lastFocus=document.activeElement;
+  $("bug-h").textContent="Баг · WCAG "+bugIt.id;
+  $("b-where").value="";
+  $("b-fact").value="";
+  $("b-fact").placeholder=bugIt.t?bugIt.t[1]:"Опиши, что происходит";
+  $("b-steps").value="1. Открыть экран «…»\n"+(bugIt.t?bugIt.t[0].map((s,i)=>(i+2)+". "+s).join("\n"):"2. …");
+  setSev(sev); $("bug").hidden=false; buildBug(); $("b-where").focus();
+}
+function closeBug(){ $("bug").hidden=true; if(lastFocus)lastFocus.focus(); }
+function setSev(v){sev=v;document.querySelectorAll("#b-sev button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v));$("b-sevhint").textContent=SEV[v];buildBug()}
+function buildBug(){
+  if(!bugIt)return;
+  const it=bugIt, where=$("b-where").value.trim()||"<экран, элемент>", fact=$("b-fact").value.trim()||(it.t?it.t[1]:"<что не так>");
+  const title=`[A11y] ${where}: ${fact.split(/\n|\.\s/)[0]}`;
+  $("b-out").textContent=`${title}
+
+Критерий: WCAG 2.2 ${it.id} ${it.en} (${it.ru}), уровень ${it.l}
+Критичность: ${sev}
+Окружение: ${device()}
+
+Шаги:
+${$("b-steps").value.trim()}
+
+Фактический результат:
+${fact}
+
+Ожидаемый результат:
+${it.how}
+
+Ссылка: https://www.w3.org/WAI/WCAG22/Understanding/${slug(it.en)}`;
+}
+["b-where","b-fact","b-steps"].forEach(id=>$(id).addEventListener("input",buildBug));
+$("b-sev").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setSev(b.dataset.v)});
+$("b-copy").onclick=()=>copy($("b-out").textContent,"Баг скопирован");
+$("b-share").onclick=()=>share($("b-out").textContent);
+$("b-close").onclick=closeBug;
+$("bug").addEventListener("click",e=>{if(e.target.id==="bug")closeBug()});
+
+/* ---------- контраст ---------- */
 function hex(v){v=v.trim().replace(/^#/,"");if(/^[0-9a-f]{3}$/i.test(v))v=v.split("").map(c=>c+c).join("");return /^[0-9a-f]{6}$/i.test(v)?"#"+v.toLowerCase():null}
 function lum(h){const n=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(c=>c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4));return .2126*n[0]+.7152*n[1]+.0722*n[2]}
 function calc(){
   const f=hex($("fg").value),b=hex($("bg").value);
-  if(!f||!b){$("ratio").textContent="—";$("res").innerHTML='<p class="empty">Введите цвет, например #333 или #1a1a1a</p>';return}
+  if(!f||!b){$("ratio").textContent="—";$("res").innerHTML='<p class="empty">Введи цвет, например #333 или #1a1a1a</p>';return}
   $("fgc").value=f;$("bgc").value=b;
   const L1=lum(f),L2=lum(b),r=(Math.max(L1,L2)+.05)/(Math.min(L1,L2)+.05);
   $("ratio").textContent=(Math.floor(r*100)/100).toFixed(2)+":1";
   $("prev").style.color=f;$("prev").style.background=b;
-  const rows=[["Обычный текст","1.4.3 AA",4.5],["Крупный текст","1.4.3 AA",3],["Иконки и границы","1.4.11 AA",3],["Обычный текст","1.4.6 AAA",7]];
+  const rows=[["Обычный текст","1.4.3 AA",4.5],["Крупный текст","1.4.3 AA",3],["Иконки, границы полей","1.4.11 AA",3],["Обычный текст","1.4.6 AAA",7],["Крупный текст","1.4.6 AAA",4.5]];
   $("res").innerHTML=rows.map(([n,c,t])=>`<div class="row"><span>${n}<br><small>${c} · нужно ${t}:1</small></span><span class="pill ${r>=t?"pass":"fail"}">${r>=t?"OK":"Нет"}</span></div>`).join("");
 }
 ["fg","bg"].forEach(id=>$(id).addEventListener("input",calc));
-$("fgc").oninput=e=>{$("fg").value=e.target.value;calc()};
-$("bgc").oninput=e=>{$("bg").value=e.target.value;calc()};
+$("fgc").addEventListener("input",e=>{$("fg").value=e.target.value;calc()});
+$("bgc").addEventListener("input",e=>{$("bg").value=e.target.value;calc()});
 $("swap").onclick=()=>{const a=$("fg").value;$("fg").value=$("bg").value;$("bg").value=a;calc()};
-q.value="контраст";render();calc();
 
-if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+/* ---------- шпаргалки ---------- */
+const kv=(k,v,sub)=>`<div class="kv"><span class="k">${k}${sub?`<small>${sub}</small>`:""}</span><span class="v">${v}</span></div>`;
+const g=(a,b)=>`<div class="gest"><b>${a}</b><span>${b}</span></div>`;
+const cmd=(t,c)=>`<div class="cmd"><div class="top"><span>${t}</span><button class="btn" data-copy="${esc(c)}">Копировать</button></div><code>${esc(c)}</code></div>`;
+const path=(a,b)=>`<div class="path"><b>${a}</b><span>${b}</span></div>`;
+const sec=(h,body,p)=>`<section class="sec"><h2>${h}</h2>${p?`<p>${p}</p>`:""}${body}</section>`;
+const box=s=>`<div class="box">${s}</div>`;
+const check=list=>`<div class="box"><ol class="check">${list.map(x=>`<li>${x}</li>`).join("")}</ol></div>`;
+const plat=()=>`<div class="plat" role="group" aria-label="Платформа">
+  <button class="btn" data-plat="android" aria-pressed="${OS==="android"}">Android</button>
+  <button class="btn" data-plat="ios" aria-pressed="${OS==="ios"}">iOS</button></div>`;
+let OS="android", SHEET="wcag";
+try{OS=localStorage.getItem("os")||"android"}catch(e){}
+
+const SHEETS={
+wcag:()=>[
+  sec("Уровни",box(
+    kv("A","минимум","Без этого часть людей не сможет пользоваться")+
+    kv("AA","обычная цель","Этот уровень требуют законы и заказчики")+
+    kv("AAA","повышенный","Желательно, но обычно не обязательно"))),
+  sec("Главные числа",box(
+    kv("Контраст текста","4.5:1","1.4.3 AA")+
+    kv("Контраст крупного текста","3:1","1.4.3 AA · от 18pt или 14pt жирным")+
+    kv("Иконки, границы полей","3:1","1.4.11 AA")+
+    kv("Контраст текста AAA","7:1","1.4.6 AAA")+
+    kv("Размер цели касания","24×24 px","2.5.8 AA")+
+    kv("Размер цели AAA","44×44 px","2.5.5 AAA")+
+    kv("Android рекомендует","48×48 dp","Material, Accessibility Scanner")+
+    kv("iOS рекомендует","44×44 pt","Apple HIG")+
+    kv("Увеличение текста","200%","1.4.4 AA")+
+    kv("Ширина без гориз. прокрутки","320 px","1.4.10 AA")+
+    kv("Вспышки","≤ 3 в сек","2.3.1 A")+
+    kv("Автозвук без кнопки стоп","≤ 3 сек","1.4.2 A")+
+    kv("Движение без паузы","≤ 5 сек","2.2.2 A"))),
+  sec("dp → px",`<div class="box"><div class="calc"><input id="dp" type="number" inputmode="decimal" value="48" aria-label="Значение в dp"> dp ×
+    <select id="dens" aria-label="Плотность экрана"><option value="1">mdpi ×1</option><option value="1.5">hdpi ×1.5</option><option value="2">xhdpi ×2</option><option value="3" selected>xxhdpi ×3</option><option value="4">xxxhdpi ×4</option></select>
+    = <output id="px">144 px</output></div></div>`,"Измеряешь на скриншоте в пикселях — переведи в dp, разделив на плотность."),
+  sec("Как оценить критичность",box(Object.entries(SEV).map(([k,v])=>kv(k,"",v)).join(""))),
+  sec("Полезные ADB-команды",box(
+    cmd("Выключить анимации","adb shell settings put global window_animation_scale 0\nadb shell settings put global transition_animation_scale 0\nadb shell settings put global animator_duration_scale 0")+
+    cmd("Вернуть анимации","adb shell settings put global window_animation_scale 1\nadb shell settings put global transition_animation_scale 1\nadb shell settings put global animator_duration_scale 1")+
+    cmd("Показывать касания","adb shell settings put system show_touches 1")+
+    cmd("Скриншот на компьютер","adb exec-out screencap -p > screen.png")))
+].join(""),
+
+sr:()=>[plat(),
+  OS==="android"?[
+    sec("Включить TalkBack",box(
+      path("Настройки → Спец. возможности → TalkBack","На некоторых телефонах — внутри «Установленные приложения» или «Скачанные службы»")+
+      path("Быстро: зажать обе кнопки громкости на 3 сек","Работает, если включена быстрая команда TalkBack"))),
+    sec("Жесты TalkBack",box(
+      g("Свайп вправо / влево","Следующий / предыдущий элемент")+
+      g("Двойное касание","Нажать на элемент в фокусе")+
+      g("Двойное касание с удержанием","Долгое нажатие")+
+      g("Провести пальцем по экрану","Озвучить то, что под пальцем")+
+      g("Свайп двумя пальцами","Прокрутка")+
+      g("Свайп вверх / вниз","Сменить режим: заголовки, ссылки, элементы управления")+
+      g("Касание двумя пальцами","Пауза озвучки")+
+      g("Касание тремя пальцами","Меню TalkBack")+
+      g("Свайп вниз, затем влево","Назад")+
+      g("Свайп вверх, затем влево","Домой"))),
+    sec("Совет",`<p class="note">Включи вывод речи на экран: Настройки TalkBack → Расширенные → Для разработчиков → «Показывать вывод речи». Озвучка будет видна текстом — удобно для скриншотов в баг.</p>`),
+    sec("ADB",box(
+      cmd("Включить TalkBack","adb shell settings put secure enabled_accessibility_services com.google.android.marvin.talkback/com.google.android.marvin.talkback.TalkBackService\nadb shell settings put secure accessibility_enabled 1")+
+      cmd("Выключить TalkBack","adb shell settings delete secure enabled_accessibility_services")),"На Samsung TalkBack называется com.samsung.android.accessibility.talkback.")
+  ].join(""):[
+    sec("Включить VoiceOver",box(
+      path("Настройки → Универсальный доступ → VoiceOver","")+
+      path("Быстро: тройное нажатие боковой кнопки","Если VoiceOver выбран в «Быстрой команде»"))),
+    sec("Жесты VoiceOver",box(
+      g("Свайп вправо / влево","Следующий / предыдущий элемент")+
+      g("Двойное касание","Нажать на элемент в фокусе")+
+      g("Провести пальцем по экрану","Озвучить то, что под пальцем")+
+      g("Свайп тремя пальцами","Прокрутка")+
+      g("Поворот двумя пальцами","Ротор: заголовки, ссылки, символы")+
+      g("Свайп вверх / вниз","Следующий пункт ротора")+
+      g("Касание двумя пальцами","Пауза озвучки")+
+      g("Свайп двумя пальцами вверх","Читать всё с начала")+
+      g("«Зигзаг» двумя пальцами","Назад, закрыть окно")+
+      g("Двойное касание двумя пальцами","Главное действие (Magic Tap)"))),
+    sec("Совет",`<p class="note">Включи «Панель субтитров» в настройках VoiceOver: озвучка будет видна текстом внизу экрана — удобно для скриншотов в баг.</p>`)
+  ].join(""),
+  sec("Что проверить",check([
+    "Каждый элемент озвучивается понятным именем",
+    "Есть роль: «кнопка», «переключатель», «флажок», «заголовок»",
+    "Есть состояние: «включено», «выбрано», «развёрнуто»",
+    "Порядок озвучки логичный",
+    "Декоративные элементы пропускаются",
+    "Открыл диалог — фокус внутри; закрыл — фокус вернулся",
+    "Ошибки и сообщения («Добавлено») объявляются",
+    "Нет элементов, до которых нельзя дойти свайпами"]))
+].join(""),
+
+zoom:()=>[plat(),
+  OS==="android"?[
+    sec("Где включить",box(
+      path("Размер шрифта","Настройки → Спец. возможности → Размер и стиль текста. На Samsung: Настройки → Дисплей → Размер и стиль шрифта")+
+      path("Масштаб изображения","Там же: «Размер экрана» — увеличивает всё, не только текст")+
+      path("Увеличение (лупа)","Настройки → Спец. возможности → Увеличение"))),
+    sec("Жесты увеличения",box(
+      g("Тройное касание","Включить / выключить увеличение")+
+      g("Тройное касание с удержанием","Временно увеличить, пока держишь")+
+      g("Перетаскивание двумя пальцами","Двигаться по экрану")+
+      g("Щипок двумя пальцами","Изменить масштаб"))),
+    sec("ADB",box(
+      cmd("Шрифт 200%","adb shell settings put system font_scale 2.0")+
+      cmd("Шрифт 130%","adb shell settings put system font_scale 1.3")+
+      cmd("Вернуть шрифт","adb shell settings put system font_scale 1.0")+
+      cmd("Крупный масштаб экрана","adb shell wm density 600")+
+      cmd("Вернуть масштаб экрана","adb shell wm density reset")),"Шрифт 200% работает на Android 14 и новее. Плотность подбирай под устройство.")
+  ].join(""):[
+    sec("Где включить",box(
+      path("Крупный текст (Dynamic Type)","Настройки → Универсальный доступ → Дисплей и размер текста → Увеличенный текст. Включи «Увеличенные размеры» для максимума")+
+      path("Масштаб экрана","Настройки → Экран и яркость → Масштаб → Крупнее")+
+      path("Увеличение (лупа)","Настройки → Универсальный доступ → Увеличение"))),
+    sec("Жесты увеличения",box(
+      g("Двойное касание тремя пальцами","Включить / выключить увеличение")+
+      g("Перетаскивание тремя пальцами","Двигаться по экрану")+
+      g("Двойное касание тремя пальцами и вести","Изменить масштаб")))
+  ].join(""),
+  sec("Что проверить",check([
+    "Текст растёт вместе с системной настройкой",
+    "Ничего не обрезается и нет «…» с потерей смысла",
+    "Текст не налезает на соседние элементы",
+    "Кнопки растут вместе с текстом, их можно нажать",
+    "Длинные экраны прокручиваются, ничего не уходит за край",
+    "Нет горизонтальной прокрутки (кроме карт и таблиц)",
+    "Альбомная ориентация тоже работает"]))
+].join("")
+};
+function renderSheet(){
+  $("sheet").innerHTML=`<div class="sheet">${SHEETS[SHEET]()}</div>`;
+  document.querySelectorAll("#hd-sheets button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.s===SHEET));
+  if(SHEET==="wcag"){const up=()=>{const v=parseFloat($("dp").value)||0;$("px").textContent=Math.round(v*parseFloat($("dens").value))+" px"};$("dp").oninput=up;$("dens").onchange=up;up()}
+}
+$("hd-sheets").addEventListener("click",e=>{const b=e.target.closest("button");if(b){SHEET=b.dataset.s;renderSheet();window.scrollTo(0,0)}});
+
+/* ---------- общие клики ---------- */
+document.addEventListener("click",e=>{
+  const sum=e.target.closest(".sum"); if(sum){toggleCard(sum.parentElement);return}
+  const c=e.target.closest("[data-copy]"); if(c){copy(c.dataset.copy);return}
+  const b=e.target.closest("[data-bug]"); if(b){openBug(b.dataset.bug);return}
+  const p=e.target.closest("[data-plat]"); if(p){OS=p.dataset.plat;try{localStorage.setItem("os",OS)}catch(_){}renderSheet();return}
+  if(e.target.id==="aaa"){showAAA=!showAAA;render()}
+});
+
+/* ---------- вкладки и переходы ---------- */
+const TITLES={find:"Найти критерий",contrast:"Проверка контраста",sheets:"Шпаргалки"};
+let TAB="find";
+function go(tab,sheet){
+  TAB=tab;
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===tab));
+  ["find","contrast","sheets"].forEach(t=>$("p-"+t).classList.toggle("on",t===tab));
+  $("title").textContent=TITLES[tab];
+  $("hd-find").hidden=tab!=="find"; $("hd-sheets").hidden=tab!=="sheets";
+  if(tab==="sheets"){if(sheet)SHEET=sheet;renderSheet()}
+  window.scrollTo(0,0);
+}
+document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b)go(b.dataset.tab)});
+// Ярлыки: #contrast, #sr, #zoom, #wcag, #find
+window.route=function(r){
+  r=(r||"").replace("#","");
+  if(r==="contrast")go("contrast");
+  else if(["sr","zoom","wcag"].includes(r))go("sheets",r);
+  else if(r==="find"){go("find");$("q").focus()}
+};
+// Кнопка «Назад» Android: true — обработано внутри
+window.goBack=function(){
+  if(!$("bug").hidden){closeBug();return true}
+  if(TAB!=="find"){go("find");return true}
+  const open=document.querySelector(".card.open"); if(open&&document.querySelectorAll(".card").length>1){toggleCard(open,false);return true}
+  if($("q").value){$("q").value="";render();window.scrollTo(0,0);return true}
+  return false;
+};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("bug").hidden)closeBug()});
+
+render(); calc(); route(location.hash);
+if(!NATIVE&&"serviceWorker" in navigator&&location.protocol.startsWith("http")){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
 </script>
-</body></html>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="contrast" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_contrast" android:shortcutLongLabel="@string/sc_contrast">
+        <intent android:action="android.intent.action.VIEW" android:data="wcag://open/contrast"
+            android:targetPackage="ru.fakingfanny.wcag" android:targetClass="ru.fakingfanny.wcag.MainActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="sr" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_sr" android:shortcutLongLabel="@string/sc_sr">
+        <intent android:action="android.intent.action.VIEW" android:data="wcag://open/sr"
+            android:targetPackage="ru.fakingfanny.wcag" android:targetClass="ru.fakingfanny.wcag.MainActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="zoom" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_zoom" android:shortcutLongLabel="@string/sc_zoom">
+        <intent android:action="android.intent.action.VIEW" android:data="wcag://open/zoom"
+            android:targetPackage="ru.fakingfanny.wcag" android:targetClass="ru.fakingfanny.wcag.MainActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="find" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_find" android:shortcutLongLabel="@string/sc_find">
+        <intent android:action="android.intent.action.VIEW" android:data="wcag://open/find"
+            android:targetPackage="ru.fakingfanny.wcag" android:targetClass="ru.fakingfanny.wcag.MainActivity" />
+    </shortcut>
+</shortcuts>

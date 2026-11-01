@@ -7,3 +7,9 @@
 **Открыть:** https://fakingfanny.github.io/WCAG/
 
 Установка на Android: открыть ссылку в Chrome → ⋮ → «Установить приложение».
+
+## Android-приложение (APK)
+
+Скачать последнюю версию: https://github.com/FakingFanny/WCAG/releases/latest/download/wcag.apk
+
+APK собирается автоматически при каждом изменении (вкладка Actions).

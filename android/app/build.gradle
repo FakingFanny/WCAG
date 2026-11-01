@@ -1,0 +1,29 @@
+plugins { id "com.android.application" }
+
+android {
+    namespace "ru.fakingfanny.wcag"
+    compileSdk 34
+    defaultConfig {
+        applicationId "ru.fakingfanny.wcag"
+        minSdk 24
+        targetSdk 34
+        // Номер версии берётся из номера сборки GitHub, чтобы обновления ставились поверх
+        versionCode((System.getenv("GITHUB_RUN_NUMBER") ?: "1") as Integer)
+        versionName "1." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+    }
+    signingConfigs {
+        // Постоянный ключ, чтобы каждая новая сборка устанавливалась поверх старой
+        app {
+            storeFile file("wcag.keystore")
+            storePassword "wcagwcag"
+            keyAlias "wcag"
+            keyPassword "wcagwcag"
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.app
+        }
+    }
+}

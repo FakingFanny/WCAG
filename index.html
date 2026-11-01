@@ -161,6 +161,48 @@ nav.tabs button[aria-selected="true"] .ic{background:var(--brand-soft)}
 pre.out{margin:0;font-family:var(--mono);font-size:13px;white-space:pre-wrap;word-break:break-word;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
 .toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:reduce){.chev{transition:none}}
+
+/* v4 */
+.shot{display:grid;gap:10px}
+#shot-box,#cl-out{scroll-margin-top:150px}
+.cwrap-canvas{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--sunk);touch-action:manipulation}
+#shot{display:block;width:100%;height:auto;cursor:crosshair}
+.mark{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px #000;pointer-events:none}
+.mark b{position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:800;background:#000;color:#fff;border-radius:6px;padding:1px 6px;white-space:nowrap}
+.sw{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:12px;padding:13px 14px;border-top:1px solid var(--line);cursor:pointer}
+.sw:first-child{border-top:0}
+.sw:focus-visible{outline:3px solid var(--brand);outline-offset:-3px}
+.sw .swl{flex:1;min-width:0;font-weight:700}
+.sw .swl small{display:block;font-weight:500;color:var(--muted);font-size:13px}
+.knob{flex:none;width:48px;height:28px;border-radius:999px;background:var(--line);position:relative;transition:background .15s}
+.knob::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgb(0 0 0 / .3);transition:left .15s}
+.sw[aria-checked="true"] .knob{background:var(--brand)}
+.sw[aria-checked="true"] .knob::after{left:23px}
+.sw[aria-disabled="true"]{opacity:.55}
+.warn{background:var(--bad-bg);border-radius:16px;padding:14px;display:grid;gap:10px}
+.warn h3{margin:0;font-size:16px}
+.warn ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.ci{display:grid;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+.ci:first-child{border-top:0}
+.ci .ct small{display:block;color:var(--muted);font-size:13px}
+.cb{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.cb button{font-size:13px;font-weight:800;padding:7px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;min-width:52px}
+.cb button[data-mark="ok"][aria-pressed="true"]{background:var(--a-bg);color:var(--a);border-color:var(--a)}
+.cb button[data-mark="bug"][aria-pressed="true"]{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.cb button[data-mark="na"][aria-pressed="true"]{background:var(--sunk);color:var(--fg);border-color:var(--muted)}
+.cb .link{border:0;background:none;color:var(--brand);text-decoration:underline;text-underline-offset:3px;min-width:0}
+.sumbar{display:flex;gap:8px;flex-wrap:wrap;font-size:14px;font-weight:700}
+.sumbar span{padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.bi{all:unset;box-sizing:border-box;width:100%;display:grid;gap:4px;padding:12px 14px;border-top:1px solid var(--line);cursor:pointer}
+.bi:first-child{border-top:0}
+.bi:focus-visible{outline:3px solid var(--brand);outline-offset:-3px}
+.bi .bh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.bi .bh b{color:var(--brand);font-size:15px}
+.bi .bf{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--muted)}
+.sevp{font-size:12px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--bad-bg);color:var(--bad)}
+input.t2{font:inherit;font-size:16px;color:var(--fg);padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);width:100%}
+nav.tabs .in{grid-template-columns:repeat(var(--tabs,5),1fr)}
+nav.tabs button .ic{padding:3px 14px}
 </style>
 </head>
 <body>
@@ -172,6 +214,10 @@ pre.out{margin:0;font-family:var(--mono);font-size:13px;white-space:pre-wrap;wor
       <input id="q" type="search" placeholder="Например: контраст или 2.5.8" autocomplete="off" enterkeyhint="search" aria-label="Поиск критерия WCAG">
       <div class="tags" id="tags"></div>
     </div>
+    <div id="hd-check" class="seg" hidden>
+      <button data-c="contrast" aria-pressed="true">Контраст</button>
+      <button data-c="list" aria-pressed="false">Чек-лист экрана</button>
+    </div>
     <div id="hd-sheets" class="seg" hidden>
       <button data-s="wcag" aria-pressed="true">WCAG</button>
       <button data-s="sr" aria-pressed="false">Озвучка</button>
@@ -182,7 +228,19 @@ pre.out{margin:0;font-family:var(--mono);font-size:13px;white-space:pre-wrap;wor
 
 <main id="p-find" class="on"><div class="in list" id="list" aria-live="polite"></div></main>
 
-<main id="p-contrast"><div class="in cwrap">
+<main id="p-check"><div class="in cwrap" id="c-contrast">
+  <section class="shot">
+    <label class="btn primary" for="shot-in" style="justify-self:start">Открыть скриншот</label>
+    <input type="file" id="shot-in" accept="image/*" hidden>
+    <div id="shot-box" class="shot" hidden>
+      <div class="plat" role="group" aria-label="Что выбираю">
+        <button class="btn" data-pick="bg" aria-pressed="true">1. Тапни по фону</button>
+        <button class="btn" data-pick="fg" aria-pressed="false">2. Тапни по тексту</button>
+      </div>
+      <div class="cwrap-canvas"><canvas id="shot" aria-label="Скриншот: тапни, чтобы взять цвет"></canvas><span class="mark" id="mk-fg" hidden><b>текст</b></span><span class="mark" id="mk-bg" hidden><b>фон</b></span></div>
+      <p class="note">Сначала тапни по фону, потом по букве рядом. Цвет буквы приложение уточнит само в радиусе нескольких пикселей, так что сглаживание шрифта не помешает.</p>
+    </div>
+  </section>
   <div class="pair">
     <label class="field">Текст<div><input type="color" id="fgc" value="#767676" aria-label="Выбрать цвет текста"><input type="text" id="fg" value="#767676" spellcheck="false" autocapitalize="off"></div></label>
     <label class="field">Фон<div><input type="color" id="bgc" value="#ffffff" aria-label="Выбрать цвет фона"><input type="text" id="bg" value="#ffffff" spellcheck="false" autocapitalize="off"></div></label>
@@ -190,15 +248,23 @@ pre.out{margin:0;font-family:var(--mono);font-size:13px;white-space:pre-wrap;wor
   <div class="actions"><button class="btn" id="swap">⇅ Поменять местами</button></div>
   <div class="preview" id="prev"><span class="ratio" id="ratio">4.54:1</span><span>Пример обычного текста</span><span style="font-size:24px;font-weight:700">Крупный текст</span></div>
   <div id="res" style="display:grid;gap:8px"></div>
+  <div class="actions"><button class="btn primary" id="c-bug">Завести баг по контрасту</button></div>
   <p class="note">Крупный текст — от 18pt (≈ 24sp) или от 14pt жирным (≈ 18.7sp). Неактивные элементы и логотипы требованию не подлежат.</p>
-</div></main>
+</div>
+<div class="in cwrap" id="c-list" hidden></div>
+</main>
+
+<main id="p-pult"><div class="in cwrap" id="pult"></div></main>
+<main id="p-bugs"><div class="in cwrap" id="bugs"></div></main>
 
 <main id="p-sheets"><div class="in" id="sheet"></div></main>
 
 <nav class="tabs" aria-label="Разделы">
   <div class="in" role="tablist">
     <button role="tab" data-tab="find" aria-selected="true"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>Найти</button>
-    <button role="tab" data-tab="contrast" aria-selected="false"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></span>Контраст</button>
+    <button role="tab" data-tab="check" aria-selected="false"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></span>Проверка</button>
+    <button role="tab" data-tab="pult" aria-selected="false" id="tab-pult"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></span>Пульт</button>
+    <button role="tab" data-tab="bugs" aria-selected="false"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="7" width="10" height="13" rx="5"/><path d="M9 7a3 3 0 0 1 6 0M3 13h4M17 13h4M4 7l3 2M20 7l-3 2M4 20l3-2M20 20l-3-2"/></svg></span>Баги</button>
     <button role="tab" data-tab="sheets" aria-selected="false"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6M9 18h3"/></svg></span>Шпаргалки</button>
   </div>
 </nav>
@@ -223,6 +289,8 @@ pre.out{margin:0;font-family:var(--mono);font-size:13px;white-space:pre-wrap;wor
     <div class="actions">
       <button class="btn primary" id="b-copy">Копировать</button>
       <button class="btn" id="b-share">Поделиться</button>
+      <button class="btn" id="b-save">Сохранить</button>
+      <button class="btn" id="b-del" hidden>Удалить</button>
       <button class="btn" id="b-close">Закрыть</button>
     </div>
   </div>
@@ -467,30 +535,37 @@ $("tags").addEventListener("click",e=>{if(e.target.tagName==="BUTTON"){$("q").va
 
 /* ---------- баг-репорт ---------- */
 const SEV={"Блокер":"Пользователь не может выполнить задачу (например, оплатить с TalkBack).","Высокая":"Задачу выполнить очень трудно, обходной путь неочевиден.","Средняя":"Неудобно, но есть понятный обходной путь.","Низкая":"Мелкая неточность, на выполнение задачи не влияет."};
-let bugIt=null, sev="Высокая", lastFocus=null;
-function openBug(id){
-  bugIt=byId[id]; lastFocus=document.activeElement;
-  $("bug-h").textContent="Баг · WCAG "+bugIt.id;
-  $("b-where").value="";
-  $("b-fact").value="";
+let BUGS=[];
+try{BUGS=JSON.parse(localStorage.getItem("bugs")||"[]")}catch(e){BUGS=[]}
+function saveBugs(){try{localStorage.setItem("bugs",JSON.stringify(BUGS))}catch(e){}}
+let bugIt=null, bugId=null, sev="Высокая", lastFocus=null, delArm=false;
+
+// pre: {where, fact, steps, sev, id}
+function openBug(crit,pre){
+  pre=pre||{};
+  bugIt=byId[crit]; bugId=pre.id||null; lastFocus=document.activeElement; delArm=false;
+  $("bug-h").textContent=(bugId?"Баг · ":"Новый баг · ")+"WCAG "+bugIt.id;
+  $("b-where").value=pre.where||"";
+  $("b-fact").value=pre.fact||"";
   $("b-fact").placeholder=bugIt.t?bugIt.t[1]:"Опиши, что происходит";
-  $("b-steps").value="1. Открыть экран «…»\n"+(bugIt.t?bugIt.t[0].map((s,i)=>(i+2)+". "+s).join("\n"):"2. …");
-  setSev(sev); $("bug").hidden=false; buildBug(); $("b-where").focus();
+  $("b-steps").value=pre.steps||("1. Открыть экран «…»\n"+(bugIt.t?bugIt.t[0].map((s,i)=>(i+2)+". "+s).join("\n"):"2. …"));
+  $("b-del").hidden=!bugId; $("b-del").textContent="Удалить";
+  $("b-save").textContent=bugId?"Сохранено":"Сохранить";
+  setSev(pre.sev||sev); $("bug").hidden=false; buildBug();
+  if(!bugId)$("b-where").focus(); else $("bug-h").setAttribute("tabindex","-1"),$("bug-h").focus();
 }
-function closeBug(){ $("bug").hidden=true; if(lastFocus)lastFocus.focus(); }
+function closeBug(){ $("bug").hidden=true; if(lastFocus&&document.contains(lastFocus))lastFocus.focus(); if(TAB==="bugs")renderBugs(); }
 function setSev(v){sev=v;document.querySelectorAll("#b-sev button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v));$("b-sevhint").textContent=SEV[v];buildBug()}
-function buildBug(){
-  if(!bugIt)return;
-  const it=bugIt, where=$("b-where").value.trim()||"<экран, элемент>", fact=$("b-fact").value.trim()||(it.t?it.t[1]:"<что не так>");
-  const title=`[A11y] ${where}: ${fact.split(/\n|\.\s/)[0]}`;
-  $("b-out").textContent=`${title}
+function bugText(b){
+  const it=byId[b.crit], where=b.where||"<экран, элемент>", fact=b.fact||(it.t?it.t[1]:"<что не так>");
+  return `[A11y] ${where}: ${fact.split(/\n|\.\s/)[0]}
 
 Критерий: WCAG 2.2 ${it.id} ${it.en} (${it.ru}), уровень ${it.l}
-Критичность: ${sev}
-Окружение: ${device()}
+Критичность: ${b.sev}
+Окружение: ${b.env||device()}
 
 Шаги:
-${$("b-steps").value.trim()}
+${(b.steps||"").trim()}
 
 Фактический результат:
 ${fact}
@@ -500,10 +575,26 @@ ${it.how}
 
 Ссылка: https://www.w3.org/WAI/WCAG22/Understanding/${slug(it.en)}`;
 }
+function curBug(){
+  const old=bugId?BUGS.find(b=>b.id===bugId):null;
+  return {id:bugId,crit:bugIt.id,where:$("b-where").value.trim(),fact:$("b-fact").value.trim(),steps:$("b-steps").value,sev,env:old?old.env:device(),time:old?old.time:Date.now()};
+}
+function buildBug(){ if(bugIt){$("b-out").textContent=bugText(curBug()); if(bugId)$("b-save").textContent="Сохранить";} }
+function storeBug(){
+  const b=curBug();
+  if(!b.id){b.id=Date.now();bugId=b.id;BUGS.unshift(b)}
+  else{const i=BUGS.findIndex(x=>x.id===b.id); if(i>=0)BUGS[i]=b; else BUGS.unshift(b)}
+  saveBugs(); $("b-del").hidden=false; $("b-save").textContent="Сохранено"; $("bug-h").textContent="Баг · WCAG "+bugIt.id;
+}
 ["b-where","b-fact","b-steps"].forEach(id=>$(id).addEventListener("input",buildBug));
 $("b-sev").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setSev(b.dataset.v)});
-$("b-copy").onclick=()=>copy($("b-out").textContent,"Баг скопирован");
-$("b-share").onclick=()=>share($("b-out").textContent);
+$("b-copy").onclick=()=>{storeBug();copy($("b-out").textContent,"Баг скопирован и сохранён")};
+$("b-share").onclick=()=>{storeBug();share($("b-out").textContent)};
+$("b-save").onclick=()=>{storeBug();toast("Сохранено в «Баги»")};
+$("b-del").onclick=()=>{
+  if(!delArm){delArm=true;$("b-del").textContent="Точно удалить?";return}
+  BUGS=BUGS.filter(b=>b.id!==bugId);saveBugs();toast("Баг удалён");closeBug();
+};
 $("b-close").onclick=closeBug;
 $("bug").addEventListener("click",e=>{if(e.target.id==="bug")closeBug()});
 
@@ -702,23 +793,217 @@ document.addEventListener("click",e=>{
 });
 let fromSheet=false;
 
+/* ---------- контраст по скриншоту ---------- */
+let PICK="bg", shotCtx=null;
+function setPick(m){PICK=m;document.querySelectorAll("[data-pick]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.pick===m))}
+document.querySelectorAll("[data-pick]").forEach(b=>b.addEventListener("click",()=>setPick(b.dataset.pick)));
+$("shot-in").addEventListener("change",e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{const img=new Image();img.onload=()=>{
+    const c=$("shot"); c.width=img.naturalWidth; c.height=img.naturalHeight;
+    shotCtx=c.getContext("2d",{willReadFrequently:true}); shotCtx.drawImage(img,0,0);
+    $("shot-box").hidden=false; $("mk-fg").hidden=true; $("mk-bg").hidden=true; setPick("bg");
+    $("shot-box").scrollIntoView({block:"start"});
+  };img.src=r.result};
+  r.readAsDataURL(f); e.target.value="";
+});
+const toHex=(r,g,b)=>"#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("");
+function ratioHex(a,b){const L1=lum(a),L2=lum(b);return (Math.max(L1,L2)+.05)/(Math.min(L1,L2)+.05)}
+$("shot").addEventListener("click",e=>{
+  if(!shotCtx)return;
+  const c=$("shot"), rect=c.getBoundingClientRect();
+  const x=Math.round((e.clientX-rect.left)/rect.width*c.width), y=Math.round((e.clientY-rect.top)/rect.height*c.height);
+  const R=Math.max(3,Math.round(c.width/360*3)), x0=Math.max(0,x-R), y0=Math.max(0,y-R);
+  const w=Math.min(c.width-x0,R*2+1), h=Math.min(c.height-y0,R*2+1);
+  const d=shotCtx.getImageData(x0,y0,w,h).data, cnt={};
+  for(let i=0;i<d.length;i+=4){const k=toHex(d[i],d[i+1],d[i+2]);cnt[k]=(cnt[k]||0)+1}
+  const mode=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0][0];
+  let col;
+  if(PICK==="bg") col=mode;
+  else{ // цвет текста: самый контрастный к фону пиксель рядом — так сглаживание не мешает
+    const ci=((y-y0)*w+(x-x0))*4, center=toHex(d[ci],d[ci+1],d[ci+2]);
+    if($("mk-bg").hidden) col=center;
+    else{const ref=hex($("bg").value);col=Object.keys(cnt).reduce((best,k)=>ratioHex(k,ref)>ratioHex(best,ref)?k:best,center)}
+  }
+  $(PICK).value=col;
+  const mk=$("mk-"+PICK); mk.hidden=false; mk.style.left=(x/c.width*100)+"%"; mk.style.top=(y/c.height*100)+"%"; mk.style.background=col;
+  calc();
+  if(PICK==="fg"&&$("mk-bg").hidden) setPick("bg"); else if(PICK==="bg"&&$("mk-fg").hidden) setPick("fg");
+  toast((PICK==="fg"?"Текст ":"Фон ")+col+" · "+$("ratio").textContent);
+});
+$("c-bug").onclick=()=>{
+  const f=hex($("fg").value),b=hex($("bg").value); if(!f||!b){toast("Сначала выбери цвета");return}
+  const r=ratioHex(f,b), big=r>=3&&r<4.5;
+  openBug("1.4.3",{fact:`Текст ${f} на фоне ${b} — контраст ${(Math.floor(r*100)/100).toFixed(2)}:1, нужно ${big?"4.5:1 (или 3:1, если текст крупный)":"не меньше 4.5:1"}`});
+};
+
+/* ---------- чек-лист экрана ---------- */
+const CL_BASE=[
+ ["TalkBack объявляет название экрана","2.4.2"],
+ ["Все элементы озвучиваются понятным именем","1.1.1"],
+ ["Озвучиваются роль и состояние («кнопка», «включено»)","4.1.2"],
+ ["Порядок озвучки логичный","1.3.2"],
+ ["Заголовки размечены как заголовки","1.3.1"],
+ ["Имя кнопки содержит её видимый текст","2.5.3"],
+ ["Контраст текста ≥ 4.5:1 (крупного ≥ 3:1)","1.4.3"],
+ ["Контраст иконок и границ полей ≥ 3:1","1.4.11"],
+ ["Информация передаётся не только цветом","1.4.1"],
+ ["Шрифт 200%: ничего не обрезается и не налезает","1.4.4"],
+ ["Крупный масштаб: нет горизонтальной прокрутки","1.4.10"],
+ ["Кнопки не меньше 48 dp (минимум 24 px)","2.5.8"],
+ ["Экран работает в альбомной ориентации","1.3.4"],
+ ["С клавиатуры доступно всё, фокус виден","2.1.1"],
+ ["Сообщения и статусы объявляются","4.1.3"]
+];
+const CL={
+ "Любой экран":[],
+ "Вход":[["Вставка пароля и кода работает","3.3.8"],["Работает автозаполнение и менеджер паролей","1.3.5"],["У полей видимые подписи, не только плейсхолдер","3.3.2"],["Ошибка входа описана текстом и озвучивается","3.3.1"],["Кнопка «Показать пароль» озвучивает имя и состояние","4.1.2"],["Время на ввод кода можно продлить или запросить новый","2.2.1"]],
+ "Форма":[["У каждого поля видимая подпись и формат","3.3.2"],["Работает автозаполнение (имя, телефон, email)","1.3.5"],["Ошибки текстом рядом с полем и озвучиваются","3.3.1"],["Ошибка подсказывает, как исправить","3.3.3"],["Выбор в поле не меняет экран неожиданно","3.2.2"],["Данные не нужно вводить повторно","3.3.7"],["Важную отправку можно проверить или отменить","3.3.4"]],
+ "Список":[["Список озвучивает «в списке, N элементов»","1.3.1"],["Действия свайпом есть и кнопкой","2.5.1"],["Перетаскивание имеет альтернативу","2.5.7"],["Одинаковые «Подробнее» различаются по имени","2.4.4"],["Загрузка и «нет данных» объявляются","4.1.3"],["Карусель можно поставить на паузу","2.2.2"]],
+ "Оплата":[["Есть подтверждение перед оплатой","3.3.4"],["Таймер оплаты можно продлить, есть предупреждение","2.2.1"],["Ошибки оплаты описаны текстом и озвучиваются","3.3.1"],["Статус «Оплачено» объявляется","4.1.3"],["Код из SMS можно вставить","3.3.8"],["Фокус не прячется под липкой кнопкой «Оплатить»","2.4.11"]],
+ "Диалог":[["При открытии фокус уходит внутрь окна","2.4.3"],["После закрытия фокус возвращается на кнопку","2.4.3"],["Окно можно закрыть кнопкой, а не только свайпом","2.5.1"],["Из окна можно выйти, фокус не застревает","2.1.2"],["Заголовок окна озвучивается","1.3.1"]],
+ "Видео":[["Есть субтитры","1.2.2"],["Важное на экране описано голосом","1.2.5"],["Автозвук можно выключить","1.4.2"],["Кнопки плеера озвучивают имя и состояние","4.1.2"],["Нет вспышек чаще 3 раз в секунду","2.3.1"]]
+};
+let CLS={type:"Любой экран",name:"",marks:{}};
+try{CLS=Object.assign(CLS,JSON.parse(localStorage.getItem("cl")||"{}"))}catch(e){}
+let resetArm=false;
+function saveCL(){try{localStorage.setItem("cl",JSON.stringify(CLS))}catch(e){}}
+function clItems(){const spec=CL[CLS.type]||[];return [...spec.map(x=>[...x,CLS.type]),...CL_BASE.map(x=>[...x,"Общее"])]}
+function clCounts(list){const c={ok:0,bug:0,na:0,left:0};list.forEach(([t])=>{const m=CLS.marks[t];if(m)c[m]++;else c.left++});return c}
+function renderList(){
+  const list=clItems(), c=clCounts(list);
+  let groups={}; list.forEach(x=>(groups[x[2]]=groups[x[2]]||[]).push(x));
+  $("c-list").innerHTML=`
+  <label class="field">Экран<input class="t2" id="cl-name" value="${esc(CLS.name)}" placeholder="Например: Вход по номеру телефона"></label>
+  <div class="chips" role="group" aria-label="Тип экрана">${Object.keys(CL).map(n=>`<button data-cltype="${n}" aria-pressed="${n===CLS.type}">${n}</button>`).join("")}</div>
+  <div class="sumbar" aria-live="polite"><span>OK ${c.ok}</span><span>Баги ${c.bug}</span><span>Не применимо ${c.na}</span><span>Осталось ${c.left}</span></div>
+  ${Object.entries(groups).map(([g,items])=>`<section class="sec"><h2>${g==="Общее"&&CLS.type!=="Любой экран"?"Общее для любого экрана":g}</h2><div class="box">${items.map(([t,id])=>{const it=byId[id],m=CLS.marks[t]||"";return `<div class="ci"><div class="ct">${esc(t)}<small>${id} ${it.l} · ${esc(it.ru)}</small></div><div class="cb" role="group" aria-label="${esc(t)}">
+    <button data-mark="ok" data-t="${esc(t)}" aria-pressed="${m==="ok"}">OK</button><button data-mark="bug" data-t="${esc(t)}" aria-pressed="${m==="bug"}">Баг</button><button data-mark="na" data-t="${esc(t)}" aria-pressed="${m==="na"}" aria-label="Не применимо">Н/П</button>
+    ${m==="bug"?`<button class="link" data-clbug="${id}" data-t="${esc(t)}">Завести баг</button>`:""}</div></div>`}).join("")}</div></section>`).join("")}
+  <div class="actions"><button class="btn primary" id="cl-report">Отчёт</button><button class="btn" id="cl-reset">Начать заново</button></div>
+  <pre class="out" id="cl-out" hidden></pre>
+  <div class="actions" id="cl-out-act" hidden><button class="btn primary" id="cl-copy">Копировать отчёт</button><button class="btn" id="cl-share">Поделиться</button></div>`;
+  $("cl-name").addEventListener("input",e=>{CLS.name=e.target.value;saveCL()});
+  resetArm=false;
+}
+function clReport(){
+  const list=clItems(), c=clCounts(list), d=new Date();
+  const bugs=list.filter(([t])=>CLS.marks[t]==="bug"), left=list.filter(([t])=>!CLS.marks[t]);
+  return `Проверка доступности: ${CLS.name||"<экран>"} (${CLS.type})
+Дата: ${d.toLocaleDateString("ru-RU")}
+Окружение: ${device()}
+Итого: OK ${c.ok} · Баги ${c.bug} · Не применимо ${c.na} · Не проверено ${c.left}
+${bugs.length?`
+Проблемы:
+${bugs.map(([t,id],i)=>`${i+1}. [WCAG ${id} ${byId[id].l}] ${t}`).join("\n")}`:"\nПроблем не найдено."}${left.length?`
+
+Не проверено:
+${left.map(([t,id])=>`— ${t} (${id})`).join("\n")}`:""}`;
+}
+$("c-list").addEventListener("click",e=>{
+  const t=e.target.closest("[data-cltype]"); if(t){CLS.type=t.dataset.cltype;saveCL();renderList();return}
+  const m=e.target.closest("[data-mark]"); if(m){const k=m.dataset.t;CLS.marks[k]=CLS.marks[k]===m.dataset.mark?undefined:m.dataset.mark;if(!CLS.marks[k])delete CLS.marks[k];saveCL();const y=window.scrollY;renderList();window.scrollTo(0,y);return}
+  const b=e.target.closest("[data-clbug]"); if(b){openBug(b.dataset.clbug,{where:CLS.name,fact:"Не выполнено: "+b.dataset.t});return}
+  if(e.target.id==="cl-report"){$("cl-out").textContent=clReport();$("cl-out").hidden=false;$("cl-out-act").hidden=false;$("cl-out").scrollIntoView({block:"start"});return}
+  if(e.target.id==="cl-copy"){copy($("cl-out").textContent,"Отчёт скопирован");return}
+  if(e.target.id==="cl-share"){share($("cl-out").textContent);return}
+  if(e.target.id==="cl-reset"){if(!resetArm){resetArm=true;e.target.textContent="Точно стереть отметки?";return}CLS.marks={};CLS.name="";saveCL();renderList();toast("Чек-лист очищен")}
+});
+function showCheck(){
+  document.querySelectorAll("#hd-check button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c===CHECK));
+  $("c-contrast").hidden=CHECK!=="contrast"; $("c-list").hidden=CHECK!=="list";
+  if(CHECK==="list")renderList();
+}
+$("hd-check").addEventListener("click",e=>{const b=e.target.closest("button");if(b){CHECK=b.dataset.c;showCheck();window.scrollTo(0,0)}});
+
+/* ---------- пульт ---------- */
+const APK="https://github.com/FakingFanny/WCAG/releases/latest/download/wcag.apk";
+function pultState(){try{return JSON.parse(AndroidApp.state())}catch(e){return {}}}
+const sw=(k,label,sub,on,dis)=>`<button class="sw" role="switch" data-sw="${k}" aria-checked="${!!on}" aria-disabled="${!!dis}"><span class="swl">${label}${sub?`<small>${sub}</small>`:""}</span><span class="knob" aria-hidden="true"></span></button>`;
+function renderPult(){
+  if(!NATIVE){$("pult").innerHTML=`<p class="note">Пульт переключает TalkBack, шрифт и анимации прямо на телефоне. Он работает только в Android-приложении.</p><div class="actions"><a class="btn primary" href="${APK}">Скачать APK</a></div>`;return}
+  const s=pultState(), dis=!s.secure, f=s.font||1;
+  const fonts=[1,1.3,1.5,2], near=fonts.reduce((a,b)=>Math.abs(b-f)<Math.abs(a-f)?b:a,1);
+  $("pult").innerHTML=`
+  ${dis?`<div class="warn"><h3>Нужно разрешение (один раз)</h3>
+    <ol><li>Включи «Отладку по USB»: Настройки → О телефоне → 7 раз нажми «Номер сборки», затем Для разработчиков → Отладка по USB. На Xiaomi включи ещё «Отладка по USB (настройки безопасности)».</li>
+    <li>Подключи телефон к компьютеру с ADB.</li>
+    <li>Выполни на компьютере команду:</li></ol>
+    <div class="box">${cmd("Команда",AndroidApp.grantCmd())}</div>
+    <p style="margin:0">После этого вернись сюда. Сетка поверх экрана работает и без этого.</p>
+    <div class="actions"><button class="btn primary" id="p-recheck">Проверить снова</button></div></div>`:""}
+  <section class="sec"><h2>Переключатели</h2><div class="box">
+    ${sw("talkback","TalkBack",s.tbFound?"Чтобы выключить с TalkBack: найди этот переключатель и коснись дважды":"TalkBack не найден на телефоне",s.talkback,dis||!s.tbFound)}
+    ${sw("gray","Оттенки серого","Видно, где информация передана только цветом (1.4.1)",s.gray,dis)}
+    ${sw("anim","Анимации выключены","Проверка 2.3.3 и удобная съёмка экрана",s.animOff,dis)}
+  </div></section>
+  <section class="sec"><h2>Размер шрифта</h2><p>Сейчас ${Math.round(f*100)}%. Шрифт 200% работает на Android 14 и новее.</p>
+    <div class="chips" role="group" aria-label="Размер шрифта">${fonts.map(v=>`<button data-font="${v}" aria-pressed="${v===near}" ${dis?'aria-disabled="true"':""}>${Math.round(v*100)}%</button>`).join("")}</div></section>
+  <section class="sec"><h2>Сетка поверх экрана</h2><p>Клетка = минимальный размер кнопки. Кнопка меньше клетки — повод для бага 2.5.8.</p>
+    <div class="chips" role="group" aria-label="Сетка">${[[0,"Выкл"],[24,"24 dp"],[48,"48 dp"]].map(([v,l])=>`<button data-grid="${v}" aria-pressed="${(s.grid||0)===v}">${l}</button>`).join("")}</div>
+    ${s.overlay?"":`<div class="actions"><button class="btn primary" data-open="overlay">Разрешить показ поверх окон</button></div>`}</section>
+  <section class="sec"><h2>Плитки в шторке</h2><p class="note">Потяни шторку вниз два раза → карандаш (Изменить) → перетащи плитки TalkBack, Шрифт, Анимации и Сетка 48dp наверх. Переключать можно прямо из тестируемого приложения.</p></section>
+  <section class="sec"><h2>Системные настройки</h2><div class="actions">
+    <button class="btn" data-open="a11y">Спец. возможности</button><button class="btn" data-open="display">Экран</button><button class="btn" data-open="dev">Для разработчиков</button></div></section>`;
+}
+function pultSet(what,val){
+  const r=AndroidApp.set(what,String(val));
+  if(r==="overlay"){toast("Разреши показ поверх окон");AndroidApp.open("overlay");return}
+  if(r!=="ok")toast("Не получилось: "+r);
+  setTimeout(renderPult,350);
+}
+$("pult").addEventListener("click",e=>{
+  const s=e.target.closest("[data-sw]"), fo=e.target.closest("[data-font]"), gr=e.target.closest("[data-grid]"), op=e.target.closest("[data-open]");
+  if(e.target.id==="p-recheck"){renderPult();toast(pultState().secure?"Разрешение есть, пульт работает":"Разрешения пока нет");return}
+  if(op){AndroidApp.open(op.dataset.open);return}
+  if(gr){pultSet("grid",gr.dataset.grid);return}
+  if((s||fo)&&!pultState().secure){toast("Сначала дай разрешение — инструкция выше");return}
+  if(s){if(s.getAttribute("aria-disabled")==="true")return;pultSet(s.dataset.sw,s.getAttribute("aria-checked")==="true"?0:1);return}
+  if(fo){pultSet("font",fo.dataset.font)}
+});
+window.onNative=function(){ if(TAB==="pult")renderPult(); };
+
+/* ---------- мои баги ---------- */
+function bugsAll(){return BUGS.map(bugText).join("\n\n────────\n\n")}
+function renderBugs(){
+  if(!BUGS.length){$("bugs").innerHTML=`<p class="empty">Здесь появятся баги, которые ты заведёшь.<br>Открой критерий → «Завести баг».</p>`;return}
+  $("bugs").innerHTML=`<div class="actions"><button class="btn primary" id="bg-copy">Копировать все (${BUGS.length})</button><button class="btn" id="bg-share">Поделиться</button></div>
+  <div class="box">${BUGS.map(b=>{const it=byId[b.crit];const d=new Date(b.time);return `<button class="bi" data-openbug="${b.id}">
+    <span class="bh"><b>${b.crit}</b><span class="lvl ${it.l}">${it.l}</span><span class="sevp">${b.sev}</span><span>${d.toLocaleDateString("ru-RU")} ${d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}</span></span>
+    <span style="font-weight:700">${esc(b.where||it.ru)}</span>
+    <span class="bf">${esc(b.fact||(it.t?it.t[1]:""))}</span></button>`}).join("")}</div>`;
+}
+$("bugs").addEventListener("click",e=>{
+  const o=e.target.closest("[data-openbug]"); if(o){const b=BUGS.find(x=>String(x.id)===o.dataset.openbug);if(b)openBug(b.crit,b);return}
+  if(e.target.id==="bg-copy"){copy(bugsAll(),"Все баги скопированы");return}
+  if(e.target.id==="bg-share"){share(bugsAll())}
+});
+if(!NATIVE){$("tab-pult").hidden=true;document.querySelector("nav.tabs").style.setProperty("--tabs",4)}
+
 /* ---------- вкладки и переходы ---------- */
-const TITLES={find:"Найти критерий",contrast:"Проверка контраста",sheets:"Шпаргалки"};
-let TAB="find";
-function go(tab,sheet){
+const TITLES={find:"Найти критерий",check:"Проверка",pult:"Пульт тестировщика",bugs:"Мои баги",sheets:"Шпаргалки"};
+let TAB="find", CHECK="contrast";
+function go(tab,sub){
   TAB=tab;
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===tab));
-  ["find","contrast","sheets"].forEach(t=>$("p-"+t).classList.toggle("on",t===tab));
+  ["find","check","pult","bugs","sheets"].forEach(t=>$("p-"+t).classList.toggle("on",t===tab));
   $("title").textContent=TITLES[tab];
-  $("hd-find").hidden=tab!=="find"; $("hd-sheets").hidden=tab!=="sheets";
-  if(tab==="sheets"){if(sheet)SHEET=sheet;renderSheet()}
+  $("hd-find").hidden=tab!=="find"; $("hd-sheets").hidden=tab!=="sheets"; $("hd-check").hidden=tab!=="check";
+  if(tab==="sheets"){if(sub)SHEET=sub;renderSheet()}
+  if(tab==="check"){if(sub)CHECK=sub;showCheck()}
+  if(tab==="pult")renderPult();
+  if(tab==="bugs")renderBugs();
   window.scrollTo(0,0);
 }
 document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){fromSheet=false;go(b.dataset.tab)}});
 // Ярлыки: #contrast, #sr, #zoom, #wcag, #find
 window.route=function(r){
   r=(r||"").replace("#","");
-  if(r==="contrast")go("contrast");
+  if(r==="contrast")go("check","contrast");
+  else if(r==="list")go("check","list");
+  else if(r==="pult")go("pult");
+  else if(r==="bugs")go("bugs");
   else if(["sr","zoom","wcag"].includes(r))go("sheets",r);
   else if(r==="find"){go("find");$("q").focus()}
 };

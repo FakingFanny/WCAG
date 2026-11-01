@@ -1,0 +1,267 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#5b4bd6">
+<meta name="description" content="Поиск критериев WCAG 2.2 и проверка контраста">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>WCAG Справочник</title>
+
+
+<style>
+/* Layout: colored header band with search, simple card list below */
+:root{
+  --bg:#f6f4fb; --surface:#ffffff; --fg:#1d1a2e; --muted:#5f5a75; --line:#e3dff0;
+  --brand:#5b4bd6; --brand-soft:#ece9fd; --on-brand:#ffffff;
+  --a:#15803d; --a-bg:#dcfce7; --aa:#4338ca; --aa-bg:#e0e7ff; --aaa:#a21caf; --aaa-bg:#fae8ff;
+  --ok:#15803d; --bad:#c2410c;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14121d; --surface:#1f1c2c; --fg:#ecebf5; --muted:#a8a3c0; --line:#322e45;
+  --brand:#8f82f5; --brand-soft:#2a2547; --on-brand:#14121d;
+  --a:#86efac; --a-bg:#173524; --aa:#a5b4fc; --aa-bg:#262b55; --aaa:#f0abfc; --aaa-bg:#3d1e45;
+  --ok:#86efac; --bad:#fdba74; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#14121d; --surface:#1f1c2c; --fg:#ecebf5; --muted:#a8a3c0; --line:#322e45;
+  --brand:#8f82f5; --brand-soft:#2a2547; --on-brand:#14121d;
+  --a:#86efac; --a-bg:#173524; --aa:#a5b4fc; --aa-bg:#262b55; --aaa:#f0abfc; --aaa-bg:#3d1e45;
+  --ok:#86efac; --bad:#fdba74; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--brand)}
+.in{max-width:600px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--brand);color:var(--on-brand);border-radius:0 0 22px 22px}
+header .in{padding-block:14px 16px;display:grid;gap:12px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{margin:0;font-size:19px;font-weight:800}
+.seg{display:flex;background:color-mix(in srgb,var(--on-brand) 18%,transparent);border-radius:999px;padding:3px}
+.seg button{font:inherit;font-size:14px;font-weight:700;border:0;border-radius:999px;padding:7px 14px;background:transparent;color:var(--on-brand);cursor:pointer}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--brand)}
+#q{width:100%;font:inherit;font-size:18px;font-weight:600;padding:14px 16px;border:0;border-radius:14px;background:var(--surface);color:var(--fg)}
+#q::placeholder{color:var(--muted);font-weight:500}
+#q:focus{outline:3px solid color-mix(in srgb,var(--on-brand) 70%,transparent);outline-offset:2px}
+.tags{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-inline:-2px;padding-inline:2px}
+.tags button{flex:none;font:inherit;font-size:14px;font-weight:600;padding:6px 12px;border-radius:999px;border:0;background:color-mix(in srgb,var(--on-brand) 18%,transparent);color:var(--on-brand);cursor:pointer}
+main .in{padding-block:14px 40px;display:grid;gap:10px}
+.card{background:var(--surface);border-radius:16px;padding:14px 16px;display:grid;gap:6px;border:1px solid var(--line)}
+.head{display:flex;align-items:center;gap:10px}
+.num{font:inherit;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--brand);background:none;border:0;padding:0;cursor:pointer}
+.lvl{font-size:13px;font-weight:800;padding:3px 9px;border-radius:8px}
+.lvl.A{color:var(--a);background:var(--a-bg)} .lvl.AA{color:var(--aa);background:var(--aa-bg)} .lvl.AAA{color:var(--aaa);background:var(--aaa-bg)}
+.copy{margin-left:auto;font:inherit;font-size:13px;font-weight:700;color:var(--brand);background:var(--brand-soft);border:0;border-radius:10px;padding:7px 11px;cursor:pointer}
+.name{margin:0;font-size:17px;font-weight:700;text-wrap:balance}
+.how{margin:0;color:var(--muted)}
+.droid{margin:0;font-size:14px;color:var(--muted)}
+.droid b{color:var(--fg)}
+.more{display:flex;justify-content:center;gap:12px;align-items:center;color:var(--muted);font-size:14px;padding-top:4px}
+.more button{font:inherit;font-weight:700;color:var(--brand);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.empty{text-align:center;color:var(--muted);padding:30px 8px}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+/* contrast */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:grid;gap:6px;font-size:14px;font-weight:700;color:var(--muted)}
+.field div{display:flex;gap:6px;align-items:center}
+.field input[type=text]{min-width:0;flex:1;font:inherit;font-size:16px;color:var(--fg);padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.field input[type=color]{flex:none;width:44px;height:44px;padding:0;border:1px solid var(--line);border-radius:12px;background:none}
+.preview{border-radius:16px;padding:18px;border:1px solid var(--line);display:grid;gap:4px}
+.preview .ratio{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.preview .small{font-size:15px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+.row small{color:var(--muted)}
+.pill{font-size:13px;font-weight:800;padding:3px 10px;border-radius:999px}
+.pill.pass{color:var(--a);background:var(--a-bg)} .pill.fail{color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,transparent)}
+.swap{justify-self:start;font:inherit;font-weight:700;font-size:14px;color:var(--brand);background:var(--brand-soft);border:0;border-radius:10px;padding:8px 12px;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:12px;font-size:14px;font-weight:600;z-index:20}
+</style>
+
+</head><body><header>
+  <div class="in">
+    <div class="bar">
+      <h1>WCAG помощник</h1>
+      <div class="seg" role="tablist">
+        <button role="tab" id="t1" aria-selected="true">Поиск</button>
+        <button role="tab" id="t2" aria-selected="false">Контраст</button>
+      </div>
+    </div>
+    <div id="sbox" style="display:grid;gap:10px">
+      <input id="q" type="search" placeholder="Например: контраст" autocomplete="off" enterkeyhint="search" aria-label="Что проверяете?">
+      <div class="tags" id="tags"></div>
+    </div>
+  </div>
+</header>
+
+<main id="p1"><div class="in" id="list" aria-live="polite"></div></main>
+
+<main id="p2" hidden><div class="in">
+  <div class="pair">
+    <label class="field">Текст<div><input type="color" id="fgc" value="#767676" aria-label="Цвет текста"><input type="text" id="fg" value="#767676" spellcheck="false"></div></label>
+    <label class="field">Фон<div><input type="color" id="bgc" value="#ffffff" aria-label="Цвет фона"><input type="text" id="bg" value="#ffffff" spellcheck="false"></div></label>
+  </div>
+  <button class="swap" id="swap">⇅ Поменять</button>
+  <div class="preview" id="prev"><span class="ratio" id="ratio">4.54:1</span><span>Пример текста</span><span class="small">Мелкий текст для проверки</span></div>
+  <div id="res" style="display:grid;gap:8px"></div>
+</div></main>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const D=[
+["1.1.1","A","Нетекстовый контент","Non-text Content","alt альт текст картинка изображение иконка иконки кнопка без подписи captcha капча декоративный","У изображений, иконок и кнопок-иконок есть текстовая альтернатива; декоративные скрыты от скринридера.","contentDescription; декор — importantForAccessibility=no / contentDescription=null"],
+["1.2.1","A","Только аудио и только видео (запись)","Audio-only and Video-only (Prerecorded)","аудио видео подкаст расшифровка транскрипт запись без звука","Для аудиозаписи есть текстовая расшифровка, для немого видео — текст или аудиоописание."],
+["1.2.2","A","Субтитры (запись)","Captions (Prerecorded)","субтитры видео звук глухие слабослышащие captions","В записанном видео со звуком есть синхронные субтитры."],
+["1.2.3","A","Аудиоописание или альтернатива (запись)","Audio Description or Media Alternative (Prerecorded)","аудиоописание тифлокомментарий видео слепые описание","Визуальная информация видео передана аудиоописанием или текстовой альтернативой."],
+["1.2.4","AA","Субтитры (прямой эфир)","Captions (Live)","субтитры трансляция стрим эфир live","В прямых трансляциях есть субтитры."],
+["1.2.5","AA","Аудиоописание (запись)","Audio Description (Prerecorded)","аудиоописание тифлокомментарий видео","У записанного видео есть аудиоописание."],
+["1.2.6","AAA","Жестовый язык (запись)","Sign Language (Prerecorded)","жестовый язык сурдоперевод видео","Для записанного видео есть перевод на жестовый язык."],
+["1.2.7","AAA","Расширенное аудиоописание","Extended Audio Description (Prerecorded)","аудиоописание пауза видео расширенное","Видео ставится на паузу, если паузы слишком коротки для описания."],
+["1.2.8","AAA","Текстовая альтернатива медиа","Media Alternative (Prerecorded)","сценарий текст видео альтернатива","Для видео есть полная текстовая альтернатива."],
+["1.2.9","AAA","Только аудио (прямой эфир)","Audio-only (Live)","аудио эфир радио live расшифровка","Для живого аудио есть текстовая альтернатива."],
+["1.3.1","A","Информация и связи","Info and Relationships","структура заголовки heading списки таблицы семантика роль группа label форма связь","Заголовки, списки, таблицы, связи подписей с полями переданы программно, а не только визуально.","accessibilityHeading, labelFor, CollectionInfo"],
+["1.3.2","A","Значимая последовательность","Meaningful Sequence","порядок чтения последовательность скринридер talkback","Порядок чтения скринридером соответствует смыслу.","порядок обхода TalkBack, accessibilityTraversalBefore/After"],
+["1.3.3","A","Сенсорные характеристики","Sensory Characteristics","форма расположение цвет звук нажмите справа круглая кнопка инструкция","Инструкции не опираются только на форму, положение, размер или звук («нажмите зелёную кнопку справа»)."],
+["1.3.4","AA","Ориентация","Orientation","ориентация поворот экрана портрет ландшафт альбомная книжная","Контент работает и в портретной, и в альбомной ориентации, если она не обязательна.","screenOrientation не залочена без причины"],
+["1.3.5","AA","Определение назначения поля","Identify Input Purpose","автозаполнение autocomplete поле ввода форма email телефон","Поля с данными пользователя имеют программно определяемое назначение.","autofillHints"],
+["1.3.6","AAA","Определение назначения","Identify Purpose","назначение иконки регионы landmark персонализация","Назначение элементов интерфейса, иконок и областей определяется программно."],
+["1.4.1","A","Использование цвета","Use of Color","цвет только цвет ошибка красный ссылка дальтонизм выделение","Цвет — не единственный способ передать информацию (ошибки, ссылки, статусы)."],
+["1.4.2","A","Управление звуком","Audio Control","звук автозапуск автоплей громкость музыка","Звук, играющий дольше 3 секунд автоматически, можно остановить или приглушить."],
+["1.4.3","AA","Контраст (минимальный)","Contrast (Minimum)","контраст контрастность текст цвет фон 4.5 3:1 читаемость","Текст: ≥ 4.5:1; крупный текст (≥ 18pt или 14pt жирный): ≥ 3:1.","18pt ≈ 24sp, 14pt bold ≈ 18.66sp bold"],
+["1.4.4","AA","Изменение размера текста","Resize Text","увеличение размер шрифта масштаб 200 зум крупный шрифт","Текст увеличивается до 200% без потери контента и функций.","Настройки → Размер шрифта на максимум; sp, а не dp"],
+["1.4.5","AA","Изображения текста","Images of Text","текст картинкой изображение текста баннер","Текст отображается текстом, а не картинкой (кроме логотипов)."],
+["1.4.6","AAA","Контраст (повышенный)","Contrast (Enhanced)","контраст контрастность повышенный 7:1 текст","Текст: ≥ 7:1; крупный текст: ≥ 4.5:1."],
+["1.4.7","AAA","Тихий или отсутствующий фон","Low or No Background Audio","фоновый звук музыка речь шум","Фоновый звук минимум на 20 дБ тише речи или отключаем."],
+["1.4.8","AAA","Визуальное представление","Visual Presentation","ширина строки межстрочный интервал выравнивание цвет текста 80 символов","Строка ≤ 80 символов, без выравнивания по ширине, интервал ≥ 1.5, выбор цветов."],
+["1.4.9","AAA","Изображения текста (без исключений)","Images of Text (No Exception)","текст картинкой изображение","Текст картинкой только для декора или логотипа."],
+["1.4.10","AA","Перекомпоновка","Reflow","reflow адаптив 320 горизонтальная прокрутка скролл зум 400","Контент умещается в ширину 320 CSS px без горизонтальной прокрутки.","крупный шрифт + режим отображения «крупно»"],
+["1.4.11","AA","Контраст нетекстовых элементов","Non-text Contrast","контраст иконки границы кнопки поля фокус графики 3:1 контур","Границы полей, иконки, состояния и графики: ≥ 3:1 к соседним цветам."],
+["1.4.12","AA","Интервалы в тексте","Text Spacing","межстрочный интервал межбуквенный letter spacing line height отступы обрезка текста","При увеличенных интервалах (1.5 / 2 / 0.12 / 0.16) текст не обрезается."],
+["1.4.13","AA","Контент при наведении или фокусе","Content on Hover or Focus","тултип подсказка всплывающее наведение hover tooltip попап","Всплывающий контент можно закрыть, навести на него, и он не исчезает сам."],
+["2.1.1","A","Клавиатура","Keyboard","клавиатура таб tab навигация доступно с клавиатуры внешняя клавиатура switch access","Вся функциональность доступна с клавиатуры.","внешняя клавиатура / Switch Access, D-pad"],
+["2.1.2","A","Без ловушки для клавиатуры","No Keyboard Trap","ловушка фокуса застревает фокус клавиатура выйти","Фокус можно увести с любого компонента."],
+["2.1.3","AAA","Клавиатура (без исключений)","Keyboard (No Exception)","клавиатура рисование всё","Вообще вся функциональность доступна с клавиатуры."],
+["2.1.4","A","Горячие клавиши из символов","Character Key Shortcuts","горячие клавиши шорткат одна буква сочетание","Однобуквенные горячие клавиши можно отключить или переназначить."],
+["2.2.1","A","Регулируемое время","Timing Adjustable","таймаут время лимит сессия таймер продлить","Ограничение времени можно отключить, изменить или продлить."],
+["2.2.2","A","Пауза, стоп, скрыть","Pause, Stop, Hide","карусель слайдер анимация движение автопрокрутка бегущая строка пауза","Движущийся/обновляющийся контент дольше 5 с можно остановить."],
+["2.2.3","AAA","Без ограничения времени","No Timing","время таймер ограничение","Время не является частью задачи (кроме живых событий)."],
+["2.2.4","AAA","Прерывания","Interruptions","уведомления прерывания обновления пуш","Прерывания можно отложить или отключить."],
+["2.2.5","AAA","Повторная аутентификация","Re-authenticating","сессия логин потеря данных повторный вход","После повторного входа данные не теряются."],
+["2.2.6","AAA","Тайм-ауты","Timeouts","таймаут предупреждение потеря данных","Пользователя предупреждают о тайм-ауте, ведущем к потере данных."],
+["2.3.1","A","Три вспышки или ниже порога","Three Flashes or Below Threshold","вспышки мигание эпилепсия мерцание flash","Не более 3 вспышек в секунду (или ниже порога)."],
+["2.3.2","AAA","Три вспышки","Three Flashes","вспышки мигание эпилепсия","Не более 3 вспышек в секунду без исключений."],
+["2.3.3","AAA","Анимация от взаимодействий","Animation from Interactions","анимация движение параллакс reduce motion вестибулярный","Анимацию от действий можно отключить.","«Удалить анимацию» в спец. возможностях"],
+["2.4.1","A","Пропуск блоков","Bypass Blocks","пропустить навигацию skip link повторяющиеся блоки landmarks","Есть способ пропустить повторяющиеся блоки."],
+["2.4.2","A","Заголовок страницы","Page Titled","title заголовок страницы экрана название окна","У страницы/экрана есть понятный заголовок.","название Activity / accessibilityPaneTitle"],
+["2.4.3","A","Порядок фокуса","Focus Order","порядок фокуса таб фокус прыгает последовательность","Фокус переходит в логичном порядке."],
+["2.4.4","A","Цель ссылки (в контексте)","Link Purpose (In Context)","ссылка подробнее тут здесь название ссылки текст ссылки","Назначение ссылки понятно из её текста или контекста."],
+["2.4.5","AA","Несколько способов","Multiple Ways","поиск карта сайта навигация способы найти","Страницу можно найти более чем одним способом."],
+["2.4.6","AA","Заголовки и метки","Headings and Labels","заголовки метки подписи описательные label","Заголовки и подписи описывают тему или назначение."],
+["2.4.7","AA","Видимый фокус","Focus Visible","фокус видимый индикатор обводка outline клавиатура","Индикатор клавиатурного фокуса виден."],
+["2.4.8","AAA","Местоположение","Location","хлебные крошки где я местоположение breadcrumbs","Пользователь понимает, где он находится."],
+["2.4.9","AAA","Цель ссылки (только ссылка)","Link Purpose (Link Only)","ссылка текст ссылки подробнее","Назначение ссылки понятно из одного её текста."],
+["2.4.10","AAA","Заголовки разделов","Section Headings","заголовки разделы структура","Контент разбит заголовками разделов."],
+["2.4.11","AA","Фокус не перекрыт (минимум)","Focus Not Obscured (Minimum)","фокус перекрыт закрыт sticky липкий хедер баннер куки","Элемент в фокусе не скрыт полностью липкими панелями и баннерами.",null,1],
+["2.4.12","AAA","Фокус не перекрыт (повышенный)","Focus Not Obscured (Enhanced)","фокус перекрыт закрыт","Элемент в фокусе не скрыт даже частично.",null,1],
+["2.4.13","AAA","Внешний вид фокуса","Focus Appearance","фокус индикатор толщина контраст обводка","Индикатор фокуса ≥ 2 CSS px по периметру и контраст 3:1 изменения.",null,1],
+["2.5.1","A","Жесты указателя","Pointer Gestures","жесты свайп щипок pinch мультитач два пальца","Многоточечные и траекторные жесты имеют альтернативу одним касанием.","кнопки вместо pinch-to-zoom и свайпов"],
+["2.5.2","A","Отмена действия указателя","Pointer Cancellation","касание отмена нажатие down up срабатывание","Действие срабатывает на отпускание и его можно отменить, уведя палец."],
+["2.5.3","A","Метка в имени","Label in Name","имя метка видимый текст голосовое управление accessible name voice access","Доступное имя содержит видимый текст подписи.","Voice Access: «нажать <видимый текст>»"],
+["2.5.4","A","Активация движением","Motion Actuation","встряхнуть наклон движение акселерометр shake","Функции по движению устройства имеют альтернативу и отключаются."],
+["2.5.5","AAA","Размер цели (повышенный)","Target Size (Enhanced)","размер кнопки зона касания 44 тач таргет","Цели касания ≥ 44×44 CSS px.","48×48dp рекомендация Android"],
+["2.5.6","AAA","Одновременные механизмы ввода","Concurrent Input Mechanisms","мышь клавиатура тач ввод","Можно переключаться между способами ввода."],
+["2.5.7","AA","Перетаскивание","Dragging Movements","перетаскивание drag drop слайдер ползунок","У перетаскивания есть альтернатива одним касанием (кнопки +/−, тап).",null,1],
+["2.5.8","AA","Размер цели (минимальный)","Target Size (Minimum)","размер кнопки зона касания 24 тач таргет маленькая кнопка отступ","Цели касания ≥ 24×24 CSS px или с достаточным отступом.","Accessibility Scanner проверяет 48dp",1],
+["3.1.1","A","Язык страницы","Language of Page","язык lang произношение скринридер","Основной язык страницы определён программно.","locale приложения, TalkBack читает нужным голосом"],
+["3.1.2","AA","Язык частей","Language of Parts","язык фрагмента иностранный lang","Фрагменты на другом языке размечены.","LocaleSpan"],
+["3.1.3","AAA","Необычные слова","Unusual Words","жаргон термины глоссарий","Есть объяснение необычных слов."],
+["3.1.4","AAA","Сокращения","Abbreviations","аббревиатура сокращение","Аббревиатуры расшифрованы."],
+["3.1.5","AAA","Уровень чтения","Reading Level","простой язык сложность текста","Есть упрощённая версия сложного текста."],
+["3.1.6","AAA","Произношение","Pronunciation","произношение ударение омографы","Указано произношение, где оно важно для смысла."],
+["3.2.1","A","При фокусе","On Focus","фокус смена контекста переход автоматически","Получение фокуса не меняет контекст."],
+["3.2.2","A","При вводе","On Input","ввод выбор смена контекста автоотправка селект переключатель","Изменение настройки не меняет контекст без предупреждения."],
+["3.2.3","AA","Последовательная навигация","Consistent Navigation","навигация меню одинаковая порядок","Повторяющаяся навигация в одном порядке на всех экранах."],
+["3.2.4","AA","Последовательная идентификация","Consistent Identification","одинаковые иконки названия консистентность","Одинаковые функции названы одинаково."],
+["3.2.5","AAA","Изменение по запросу","Change on Request","смена контекста новое окно редирект","Контекст меняется только по запросу пользователя."],
+["3.2.6","A","Последовательная помощь","Consistent Help","помощь поддержка чат контакты справка","Механизмы помощи находятся в одном месте на всех экранах.",null,1],
+["3.3.1","A","Идентификация ошибки","Error Identification","ошибка валидация форма сообщение об ошибке","Ошибка ввода обнаружена и описана текстом.","TextInputLayout.setError объявляется TalkBack"],
+["3.3.2","A","Метки или инструкции","Labels or Instructions","подпись метка label плейсхолдер инструкция поле формат","У полей есть подписи или инструкции."],
+["3.3.3","AA","Подсказка при ошибке","Error Suggestion","ошибка подсказка исправление как исправить","При ошибке предлагается способ исправления."],
+["3.3.4","AA","Предотвращение ошибок (юр., фин., данные)","Error Prevention (Legal, Financial, Data)","оплата платёж подтверждение отмена юридические финансовые","Важные действия обратимы, проверяются или подтверждаются."],
+["3.3.5","AAA","Справка","Help","помощь справка подсказка","Доступна контекстная справка."],
+["3.3.6","AAA","Предотвращение ошибок (все)","Error Prevention (All)","подтверждение отмена проверка","Любая отправка обратима, проверяется или подтверждается."],
+["3.3.7","A","Повторный ввод","Redundant Entry","повторный ввод автозаполнение адрес дважды","Ранее введённые данные подставляются или доступны для выбора.",null,1],
+["3.3.8","AA","Доступная аутентификация (минимум)","Accessible Authentication (Minimum)","логин пароль вход капча вставка paste менеджер паролей когнитивный тест","Вход не требует когнитивного теста; можно вставлять пароль и коды.","не блокировать paste и автозаполнение паролей",1],
+["3.3.9","AAA","Доступная аутентификация (повышенная)","Accessible Authentication (Enhanced)","логин капча распознать объект","Без исключений для распознавания объектов.",null,1],
+["4.1.2","A","Имя, роль, значение","Name, Role, Value","имя роль состояние значение кастомный компонент чекбокс переключатель aria скринридер talkback","У элементов есть доступное имя, роль и состояние (выбран, развернут).","className/roleDescription, stateDescription, AccessibilityNodeInfo"],
+["4.1.3","AA","Статусные сообщения","Status Messages","статус уведомление тост снекбар live region объявление загрузка","Статусные сообщения объявляются без переноса фокуса.","accessibilityLiveRegion, announceForAccessibility"]
+];
+const QUICK=["контраст","фокус","alt","кнопка","размер","ошибка","форма","анимация","видео","talkback"];
+const norm=s=>s.toLowerCase().replace(/ё/g,"е");
+const items=D.map(r=>({id:r[0],l:r[1],ru:r[2],en:r[3],kw:r[4],how:r[5],droid:r[6],hay:norm(r.join(" "))}));
+let showAAA=false;
+const $=id=>document.getElementById(id),q=$("q"),list=$("list");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function score(it,tokens){
+  let s=0;
+  for(const t of tokens){
+    if(/^[\d.]+$/.test(t)){ if(it.id===t)s+=100; else if(it.id.startsWith(t))s+=20; else return 0; continue }
+    const st=t.length>4?t.slice(0,Math.max(4,t.length-2)):t;
+    if(norm(it.ru).includes(st))s+=12;
+    else if(norm(it.kw).split(" ").some(w=>w.startsWith(st)||(st.startsWith(w)&&w.length>3)))s+=8;
+    else if(it.hay.includes(st))s+=3;
+    else return 0;
+  }
+  return s;
+}
+function render(){
+  const tokens=norm(q.value).trim().split(/[\s,]+/).filter(Boolean);
+  let res=items;
+  if(tokens.length) res=items.map(it=>[it,score(it,tokens)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const hidden=showAAA?0:res.filter(i=>i.l==="AAA").length;
+  if(!showAAA) res=res.filter(i=>i.l!=="AAA");
+  let html=res.map(it=>`<article class="card">
+    <div class="head"><span class="num">${it.id}</span><span class="lvl ${it.l}">${it.l}</span><button class="copy" data-copy="WCAG ${it.id} ${esc(it.en)} (${it.l})" aria-label="Скопировать ${it.id}">Копировать</button></div>
+    <h2 class="name">${esc(it.ru)}</h2>
+    <p class="how">${esc(it.how)}</p>
+    ${it.droid?`<p class="droid"><b>Android:</b> ${esc(it.droid)}</p>`:""}
+  </article>`).join("");
+  if(!res.length) html=`<p class="empty">Ничего не нашлось. Попробуйте другое слово.</p>`;
+  if(hidden) html+=`<div class="more">Ещё ${hidden} уровня AAA <button id="aaa">Показать</button></div>`;
+  else if(showAAA) html+=`<div class="more"><button id="aaa">Скрыть AAA</button></div>`;
+  list.innerHTML=html;
+}
+let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,1500)}
+function copy(txt){
+  const done=()=>toast("Скопировано: "+txt);
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(txt,done)); else fallback(txt,done);
+}
+function fallback(txt,done){const a=document.createElement("textarea");a.value=txt;document.body.appendChild(a);a.select();try{document.execCommand("copy");done()}catch(e){toast(txt)}a.remove()}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-copy]");if(b)copy(b.dataset.copy);
+  if(e.target.id==="aaa"){showAAA=!showAAA;render()}
+});
+q.addEventListener("input",render);
+$("tags").innerHTML=QUICK.map(w=>`<button>${w}</button>`).join("");
+$("tags").onclick=e=>{if(e.target.tagName==="BUTTON"){q.value=e.target.textContent;render()}};
+function tab(n){const a=n===1;$("t1").setAttribute("aria-selected",a);$("t2").setAttribute("aria-selected",!a);$("p1").hidden=!a;$("sbox").hidden=!a;$("p2").hidden=a}
+$("t1").onclick=()=>tab(1);$("t2").onclick=()=>tab(2);
+
+function hex(v){v=v.trim().replace(/^#/,"");if(/^[0-9a-f]{3}$/i.test(v))v=v.split("").map(c=>c+c).join("");return /^[0-9a-f]{6}$/i.test(v)?"#"+v.toLowerCase():null}
+function lum(h){const n=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(c=>c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4));return .2126*n[0]+.7152*n[1]+.0722*n[2]}
+function calc(){
+  const f=hex($("fg").value),b=hex($("bg").value);
+  if(!f||!b){$("ratio").textContent="—";$("res").innerHTML='<p class="empty">Введите цвет, например #333 или #1a1a1a</p>';return}
+  $("fgc").value=f;$("bgc").value=b;
+  const L1=lum(f),L2=lum(b),r=(Math.max(L1,L2)+.05)/(Math.min(L1,L2)+.05);
+  $("ratio").textContent=(Math.floor(r*100)/100).toFixed(2)+":1";
+  $("prev").style.color=f;$("prev").style.background=b;
+  const rows=[["Обычный текст","1.4.3 AA",4.5],["Крупный текст","1.4.3 AA",3],["Иконки и границы","1.4.11 AA",3],["Обычный текст","1.4.6 AAA",7]];
+  $("res").innerHTML=rows.map(([n,c,t])=>`<div class="row"><span>${n}<br><small>${c} · нужно ${t}:1</small></span><span class="pill ${r>=t?"pass":"fail"}">${r>=t?"OK":"Нет"}</span></div>`).join("");
+}
+["fg","bg"].forEach(id=>$(id).addEventListener("input",calc));
+$("fgc").oninput=e=>{$("fg").value=e.target.value;calc()};
+$("bgc").oninput=e=>{$("bg").value=e.target.value;calc()};
+$("swap").onclick=()=>{const a=$("fg").value;$("fg").value=$("bg").value;$("bg").value=a;calc()};
+q.value="контраст";render();calc();
+
+if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+</script>
+</body></html>

@@ -10,9 +10,9 @@
         <intent android:action="android.intent.action.VIEW" android:data="wcag://open/sr"
             android:targetPackage="ru.fakingfanny.wcag" android:targetClass="ru.fakingfanny.wcag.MainActivity" />
     </shortcut>
-    <shortcut android:shortcutId="zoom" android:enabled="true" android:icon="@mipmap/ic_launcher"
-        android:shortcutShortLabel="@string/sc_zoom" android:shortcutLongLabel="@string/sc_zoom">
-        <intent android:action="android.intent.action.VIEW" android:data="wcag://open/zoom"
+    <shortcut android:shortcutId="pult" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_pult" android:shortcutLongLabel="@string/sc_pult">
+        <intent android:action="android.intent.action.VIEW" android:data="wcag://open/pult"
             android:targetPackage="ru.fakingfanny.wcag" android:targetClass="ru.fakingfanny.wcag.MainActivity" />
     </shortcut>
     <shortcut android:shortcutId="find" android:enabled="true" android:icon="@mipmap/ic_launcher"

@@ -203,20 +203,59 @@ pre.out{margin:0;font-family:var(--mono);font-size:13px;white-space:pre-wrap;wor
 input.t2{font:inherit;font-size:16px;color:var(--fg);padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);width:100%}
 nav.tabs .in{grid-template-columns:repeat(var(--tabs,5),1fr)}
 nav.tabs button .ic{padding:3px 14px}
+
+/* v5 */
+.ctx{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.ctx::-webkit-scrollbar,.chips.row::-webkit-scrollbar,.seg::-webkit-scrollbar{display:none}
+.ctx button{flex:none;font-size:14px;font-weight:700;padding:7px 13px;border-radius:999px;border:0;background:color-mix(in srgb,var(--on-brand) 18%,transparent);color:var(--on-brand);cursor:pointer}
+.ctx button[aria-pressed="true"]{background:var(--surface);color:var(--brand)}
+.tags button{background:transparent!important;border:1px solid color-mix(in srgb,var(--on-brand) 45%,transparent)!important;font-weight:600!important;font-size:13px!important;padding:5px 11px!important}
+.seg{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.chips.row{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips.row button{flex:none}
+.answer{background:var(--surface);border:2px solid var(--brand);border-radius:16px;padding:12px 14px;display:grid;gap:8px}
+.answer .label{margin:0}
+.answer .pills{display:flex;gap:8px;flex-wrap:wrap}
+.answer .pills button{font-size:16px;font-weight:800;padding:8px 12px;border-radius:12px;border:0;background:var(--brand-soft);color:var(--brand);cursor:pointer;display:flex;gap:8px;align-items:baseline;text-align:left}
+.answer .pills small{font-weight:600;font-size:13px;color:var(--fg)}
+.dtwhy summary{padding:12px 14px;font-weight:700;cursor:pointer}
+.dtwhy-b{padding:0 14px 14px;display:grid;gap:8px;color:var(--muted)}
+.dtwhy-b p{margin:0}
+.dtwhy-b b{color:var(--fg)}
+.dtc{display:flex;gap:8px;align-items:center;padding:8px 10px;border-top:1px solid var(--line)}
+.dtc:first-child{border-top:0}
+.dtn{flex:none;width:26px;height:26px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-weight:800;display:grid;place-items:center;font-size:13px}
+.dtc .t2{flex:1;min-width:0}
+.dtc .btn{flex:none;padding:10px 12px}
+.dtcount{font-weight:700;color:var(--muted);align-self:center}
+.dtwrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+table.dt{border-collapse:collapse;width:100%;font-size:15px}
+.dt .cn{text-align:center;padding:8px 4px}
+.dt td:has(.yn){text-align:center;padding:8px 4px}
+.dt th,.dt td{padding:8px 10px;border-top:1px solid var(--line);text-align:left;vertical-align:middle}
+.dt thead th{border-top:0;font-size:13px;color:var(--muted);font-weight:800;white-space:nowrap}
+.dt .num-c{font-weight:800;color:var(--brand);font-variant-numeric:tabular-nums}
+.yn{font-size:13px;font-weight:800;padding:3px 7px;border-radius:999px}
+.yn.y{background:var(--a-bg);color:var(--a)} .yn.n{background:var(--bad-bg);color:var(--bad)}
+.dte{min-width:80px;padding:8px 10px!important}
+.dt .dtn{margin:auto}
+.dtd{width:22px;height:22px;accent-color:var(--brand)}
 </style>
 </head>
 <body>
 
 <header>
   <div class="in">
-    <h1 id="title">Найти критерий</h1>
+    <h1 id="title" hidden>Найти критерий</h1>
     <div id="hd-find" style="display:grid;gap:10px">
-      <input id="q" type="search" placeholder="Например: контраст или 2.5.8" autocomplete="off" enterkeyhint="search" aria-label="Поиск критерия WCAG">
+      <input id="q" type="search" placeholder="Опиши проблему: фокус теряется" autocomplete="off" enterkeyhint="search" aria-label="Поиск критерия WCAG">
+      <div class="ctx" id="ctx" role="group" aria-label="Для чего проверяем"></div>
       <div class="tags" id="tags"></div>
     </div>
     <div id="hd-check" class="seg" hidden>
       <button data-c="contrast" aria-pressed="true">Контраст</button>
-      <button data-c="list" aria-pressed="false">Чек-лист экрана</button>
+      <button data-c="list" aria-pressed="false">Чек-лист</button>
+      <button data-c="dt" aria-pressed="false">Таблица решений</button>
     </div>
     <div id="hd-sheets" class="seg" hidden>
       <button data-s="wcag" aria-pressed="true">WCAG</button>
@@ -252,6 +291,7 @@ nav.tabs button .ic{padding:3px 14px}
   <p class="note">Крупный текст — от 18pt (≈ 24sp) или от 14pt жирным (≈ 18.7sp). Неактивные элементы и логотипы требованию не подлежат.</p>
 </div>
 <div class="in cwrap" id="c-list" hidden></div>
+<div class="in cwrap" id="c-dt" hidden></div>
 </main>
 
 <main id="p-pult"><div class="in cwrap" id="pult"></div></main>
@@ -475,17 +515,84 @@ function device(){
 const items=D.map(r=>({id:r[0],l:r[1],ru:r[2],en:r[3],kw:r[4],how:r[5],droid:r[6],t:T[r[0]],hay:norm([r[0],r[2],r[3],r[4],r[5],r[6]||""].join(" "))}));
 const byId=Object.fromEntries(items.map(i=>[i.id,i]));
 let showAAA=false;
-const QUICK=["контраст","talkback","кнопка","размер","фокус","шрифт","ошибка","форма","жесты","анимация"];
+const QUICK=["фокус теряется","не озвучивается","текст обрезается","бледный текст","маленькая кнопка","ошибка не озвучивается","нельзя вставить пароль","только свайпом","контраст","скринридер"];
+/* ---------- поиск простыми словами ---------- */
+// Симптомы: если в запросе есть хотя бы по одному варианту из каждой группы — эти критерии первыми.
+const SYN=[
+ [[["фокус","курсор"],["теря","пропа","сбрас","слета","прыга","скач","уход","улета","потер","исчез"]],["2.4.3","2.4.11","2.4.7"]],
+ [[["фокус","курсор","обводк","рамк"],["не вид","невид","не замет","незамет","нет обвод","спрят","закры","перекр","под клав","под кноп"]],["2.4.7","2.4.11","1.4.11"]],
+ [[["застр","ловушк","не выйти","не уйти","заперт","не уходит"]],["2.1.2"]],
+ [[["не озвуч","молчит","не чита","не говор","не произ","пропуска","без метк","без назв","без подпис","без имени","unlabeled","без лейбл"]],["1.1.1","4.1.2","2.5.3"],-25],
+ [[["озвуч","чита","говор","произ"],["по-англ","англ","не на том","другим голос","не тем голос","акцент"]],["3.1.1","3.1.2","2.5.3"]],
+ [[["озвуч","чита","говор"],["не то","неправ","не совп","иначе","другое"]],["2.5.3","4.1.2","1.1.1"]],
+ [[["состояни","включен","выключ","выбран","отмечен","развер","сверн"],["не озвуч","не говор","не чита","не объяв","не понят"]],["4.1.2"]],
+ [[["порядок","очеред","последоват"]],["1.3.2","2.4.3"]],
+ [[["обреза","не помещ","не влез","налез","наезж","перекрыв","троеточ","многоточ","..."]],["1.4.4","1.4.10","1.4.12"]],
+ [[["крупн","больш","увелич","200","лупа","зум","масштаб"],["шрифт","текст","экран"]],["1.4.4","1.4.10"]],
+ [[["гориз"],["прокрут","скрол"]],["1.4.10"]],
+ [[["бледн","светл","серый текст","плохо вид","плохо чита","сливает","блекл","тускл"]],["1.4.3","1.4.11"]],
+ [[["мелк","маленьк","крошечн","не попасть","не попад","промах","узк"]],["2.5.8","2.5.5"]],
+ [[["только цвет","красн","зелен","цветом","дальтон"]],["1.4.1"]],
+ [[["не поворач","не повор","только портрет","только вертик","ориентац","альбомн"]],["1.3.4"]],
+ [[["мига","мерца","вспыш","стробо"]],["2.3.1"]],
+ [[["сама лист","само лист","автопрокр","автолист","карусел","бегущ","слайдер сам"]],["2.2.2"]],
+ [[["таймер","время выш","врем","сесси","выкинул","разлог","тайм-аут","таймаут"]],["2.2.1","2.2.6"]],
+ [[["вставит","вставк","paste","копипаст"],["парол","код","смс","sms"]],["3.3.8"]],
+ [[["капч","captcha"]],["3.3.8","1.1.1"]],
+ [[["ошибк"],["не озвуч","не объяв","не говор","не вид","не понят","только цвет","красн","рамк"]],["3.3.1","4.1.3","1.4.1"]],
+ [[["ошибк"],["как исправ","непонят","неясн","без подсказ"]],["3.3.3"]],
+ [[["только свайп","свайпом","щипк","двумя пальц","жест"]],["2.5.1"]],
+ [[["перетаск","драг","drag","ползун"]],["2.5.7"]],
+ [[["субтитр","без звука","глух"]],["1.2.2","1.2.4"]],
+ [[["звук сам","само игра","автозвук","громк","музыка сам"]],["1.4.2"]],
+ [[["заголов"],["не озвуч","нет","не размеч","не наход"]],["1.3.1","2.4.6"]],
+ [[["экран","страниц"],["назван","заголов"],["не озвуч","не объяв","нет"]],["2.4.2"]],
+ [[["открыл","перекинул","перешл","сменил","перебросил"],["само","сам","сразу","при выбор","при фокус"]],["3.2.1","3.2.2"]],
+ [[["тост","снек","снэк","уведомл","добавлено","загрузк","статус"]],["4.1.3"]],
+ [[["плейсхолд","подсказка в поле","без подпис","нет подпис"],["пол"]],["3.3.2","1.3.1"]],
+ [[["автозаполн","autofill"]],["1.3.5"]],
+ [[["картинк","изображ","иконк","фото","логотип"],["не озвуч","без опис","без alt","без назв","молчит"]],["1.1.1"]],
+ [[["клавиатур","tab","таб"],["не дойти","недоступ","не работ","не наж","пропуск"]],["2.1.1","2.4.3"]],
+ [[["встрях","наклон","потрясти","шейк"]],["2.5.4"]],
+ [[["срабатывает сразу","при касании","нельзя отмен"]],["2.5.2"]],
+ [[["подробнее","здесь","тут","ссылк"],["непонят","одинаков","не ясно","куда"]],["2.4.4"]],
+ [[["текст картинк","картинкой текст","текст на картинк","текст на баннер"]],["1.4.5"]],
+ [[["подсказк","тултип","попап","всплыв"],["исчеза","пропада","не закр","мешает"]],["1.4.13"]],
+ [[["анимац","движен","параллакс"],["укачива","тошн","отключ","мешает"]],["2.3.3","2.2.2"]]
+];
+function synHits(qn){
+  const hits={};
+  SYN.forEach(([groups,ids,adj])=>{
+    // чем больше групп совпало, тем конкретнее симптом
+    if(groups.every(g=>g.some(s=>qn.includes(s)))) ids.forEach((id,i)=>{hits[id]=Math.max(hits[id]||0,80+groups.length*10+(adj||0)-i*10)});
+  });
+  return hits;
+}
+// Для кого / с чем тестируем
+const CTX=[
+ ["all","Все",null],
+ ["sr","Скринридер",["1.1.1","1.3.1","1.3.2","1.3.3","2.4.2","2.4.3","2.4.4","2.4.6","2.5.3","3.1.1","3.1.2","3.3.1","4.1.2","4.1.3","1.2.3","1.2.5","2.4.1","2.4.9","2.4.10"]],
+ ["zoom","Лупа и шрифт",["1.4.4","1.4.10","1.4.12","1.4.5","1.4.9","1.3.4","1.4.13","2.4.11","1.4.8"]],
+ ["color","Цвет и контраст",["1.4.1","1.4.3","1.4.11","1.4.6","1.4.8"]],
+ ["kb","Клавиатура",["2.1.1","2.1.2","2.1.4","2.4.3","2.4.7","2.4.11","2.4.12","2.4.13","3.2.1","2.4.1","2.1.3"]],
+ ["motor","Моторика",["2.5.1","2.5.2","2.5.4","2.5.7","2.5.8","2.5.5","2.5.6","2.2.1","2.1.1"]],
+ ["hear","Слух",["1.2.1","1.2.2","1.2.4","1.2.6","1.2.8","1.2.9","1.4.2","1.4.7"]],
+ ["cog","Понятность",["1.3.3","2.4.6","3.1.3","3.1.4","3.1.5","3.2.1","3.2.2","3.2.3","3.2.4","3.2.6","3.3.1","3.3.2","3.3.3","3.3.4","3.3.7","3.3.8","2.2.1","2.2.6"]],
+ ["motion","Анимация",["2.2.2","2.3.1","2.3.2","2.3.3","1.4.2"]]
+];
+let CTXSEL="all";
+try{CTXSEL=localStorage.getItem("ctx")||"all"}catch(e){}
+
 
 function score(it,tokens){
   let s=0;
   for(const t of tokens){
-    if(/^[\d.]+$/.test(t)){ if(it.id===t)s+=100; else if(it.id.startsWith(t))s+=20; else return 0; continue }
+    if(/^[\d.]+$/.test(t)){ if(it.id===t)s+=100; else if(t.length>2&&it.id.startsWith(t))s+=20; continue }
+    if(t.length<3)continue;
     const st=t.length>4?t.slice(0,Math.max(4,t.length-2)):t;
     if(norm(it.ru).includes(st))s+=12;
     else if(norm(it.kw).split(" ").some(w=>w.startsWith(st)||(st.startsWith(w)&&w.length>3)))s+=8;
     else if(it.hay.includes(st))s+=3;
-    else return 0;
   }
   return s;
 }
@@ -511,19 +618,30 @@ function card(it){
   </article>`;
 }
 function render(){
-  const q=$("q").value, tokens=norm(q).trim().split(/[\s,]+/).filter(Boolean);
-  let res=items;
-  if(tokens.length) res=items.map(it=>[it,score(it,tokens)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const q=$("q").value, qn=norm(q).trim(), tokens=qn.split(/[\s,]+/).filter(Boolean);
+  const ctx=CTX.find(c=>c[0]===CTXSEL)||CTX[0], inCtx=ctx[2]?new Set(ctx[2]):null;
+  let res=items, hits={};
+  if(tokens.length){
+    hits=synHits(qn);
+    res=items.map(it=>[it,score(it,tokens)+(hits[it.id]||0)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  }
+  if(inCtx) res=res.filter(i=>inCtx.has(i.id));
   const exact=tokens.length===1&&byId[tokens[0]];
   const hidden=(showAAA||exact)?0:res.filter(i=>i.l==="AAA").length;
   if(!showAAA&&!exact) res=res.filter(i=>i.l!=="AAA");
-  let html=res.map(card).join("");
-  if(!res.length) html=`<p class="empty">Ничего не нашлось. Попробуй другое слово или номер критерия.</p>`;
+  const top=Object.keys(hits).sort((x,y)=>hits[y]-hits[x]).filter(id=>!inCtx||inCtx.has(id)).slice(0,3);
+  let html=top.length?`<div class="answer"><p class="label">Скорее всего это</p><div class="pills">${top.map(id=>`<button data-jump="${id}">${id}<small>${esc(byId[id].ru)}</small></button>`).join("")}</div></div>`:"";
+  html+=res.map(card).join("");
+  if(!res.length) html+=`<p class="empty">Ничего не нашлось. Опиши проблему по-другому, например «кнопка без названия», или введи номер.</p>`;
   if(hidden) html+=`<div class="more">Ещё ${hidden} уровня AAA <button id="aaa">Показать</button></div>`;
   else if(showAAA) html+=`<div class="more"><button id="aaa">Скрыть AAA</button></div>`;
   $("list").innerHTML=html;
   if(res.length===1) toggleCard($("list").querySelector(".card"),true);
 }
+function renderCtx(){$("ctx").innerHTML=CTX.map(([k,n])=>`<button data-ctx="${k}" aria-pressed="${k===CTXSEL}">${n}</button>`).join("")}
+renderCtx();
+$("ctx").addEventListener("click",e=>{const b=e.target.closest("[data-ctx]");if(!b)return;CTXSEL=b.dataset.ctx;try{localStorage.setItem("ctx",CTXSEL)}catch(_){}renderCtx();render();window.scrollTo(0,0)});
+$("list").addEventListener("click",e=>{const j=e.target.closest("[data-jump]");if(!j)return;const c=$("list").querySelector(`.card[data-id="${j.dataset.jump}"]`);if(c){toggleCard(c,true);c.scrollIntoView({block:"start"})}});
 function toggleCard(c,force){
   const open=force!==undefined?force:!c.classList.contains("open");
   c.classList.toggle("open",open);
@@ -633,7 +751,7 @@ try{OS=localStorage.getItem("os")||"android"}catch(e){}
 const TOPICS=[
  ["Фокус",["2.4.3","2.4.7","2.4.11","2.1.2","3.2.1","2.4.12","2.4.13"]],
  ["Контраст",["1.4.3","1.4.11","1.4.1","1.4.6"]],
- ["Озвучка",["1.1.1","1.3.1","1.3.2","4.1.2","4.1.3","2.4.2","2.4.6","2.5.3","3.1.1"]],
+ ["Скринридер",["1.1.1","1.3.1","1.3.2","4.1.2","4.1.3","2.4.2","2.4.6","2.5.3","3.1.1"]],
  ["Шрифт и масштаб",["1.4.4","1.4.10","1.4.12","1.4.5","1.3.4"]],
  ["Кнопки и касания",["2.5.8","2.5.2","2.5.3","2.5.1","2.5.7","2.5.5"]],
  ["Жесты",["2.5.1","2.5.2","2.5.4","2.5.7"]],
@@ -653,7 +771,7 @@ try{TOPIC=localStorage.getItem("topic")||"Фокус"}catch(e){}
 function topicBox(){
   const t=TOPICS.find(x=>x[0]===TOPIC)||TOPICS[0];
   const list=t[1].map(id=>byId[id]).filter(Boolean);
-  return `<div class="chips" role="group" aria-label="Темы">${TOPICS.map(([n])=>`<button data-topic="${n}" aria-pressed="${n===t[0]}">${n}</button>`).join("")}</div>
+  return `<div class="chips row" role="group" aria-label="Темы">${TOPICS.map(([n])=>`<button data-topic="${n}" aria-pressed="${n===t[0]}">${n}</button>`).join("")}</div>
   <div class="box" id="topic-list">${list.map(it=>`<button class="trow" data-goto="${it.id}"><span class="tnum">${it.id}</span><span class="lvl ${it.l}">${it.l}</span><span class="tname">${esc(it.ru)}</span></button>`).join("")}</div>
   <div class="actions"><button class="btn" data-copy="${list.map(i=>i.id).join(", ")}">Копировать все номера</button></div>`;
 }
@@ -912,10 +1030,66 @@ $("c-list").addEventListener("click",e=>{
 });
 function showCheck(){
   document.querySelectorAll("#hd-check button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c===CHECK));
-  $("c-contrast").hidden=CHECK!=="contrast"; $("c-list").hidden=CHECK!=="list";
+  $("c-contrast").hidden=CHECK!=="contrast"; $("c-list").hidden=CHECK!=="list"; $("c-dt").hidden=CHECK!=="dt";
   if(CHECK==="list")renderList();
+  if(CHECK==="dt")renderDT();
 }
 $("hd-check").addEventListener("click",e=>{const b=e.target.closest("button");if(b){CHECK=b.dataset.c;showCheck();window.scrollTo(0,0)}});
+
+/* ---------- таблица решений ---------- */
+const DT_EXAMPLE={result:"Кнопка «Войти»",conds:["Логин заполнен","Пароль заполнен"],exp:{"1,1":"активна","1,0":"неактивна","0,1":"неактивна","0,0":"неактивна"},done:{}};
+let DT=JSON.parse(JSON.stringify(DT_EXAMPLE)), dtResetArm=false;
+try{const s=JSON.parse(localStorage.getItem("dt")||"null");if(s&&Array.isArray(s.conds))DT=Object.assign({done:{}},s)}catch(e){}
+function saveDT(){try{localStorage.setItem("dt",JSON.stringify(DT))}catch(e){}}
+function dtRows(){const n=DT.conds.length,rows=[];for(let i=0;i<(1<<n);i++){rows.push(DT.conds.map((_,j)=>((i>>(n-1-j))&1)?0:1))}return rows}
+const plural=(n,a,b,c)=>{const m=n%10,h=n%100;return n+" "+(m===1&&h!==11?a:m>=2&&m<=4&&(h<12||h>14)?b:c)};
+function renderDT(){
+  const n=DT.conds.length, rows=dtRows();
+  $("c-dt").innerHTML=`
+  <details class="box dtwhy"${n?"":" open"}><summary>Зачем нужна таблица решений</summary>
+    <div class="dtwhy-b"><p>Классы эквивалентности и граничные значения работают, когда поле одно. Если результат зависит от нескольких условий сразу, легко пропустить комбинацию. Таблица решений перебирает их все: каждая строка — один тест.</p>
+    <p><b>Правило:</b> у каждого условия два варианта (да/нет), поэтому каждое новое условие удваивает число строк. 2 условия — 4 строки, 3 — 8, 4 — 16.</p></div></details>
+  <label class="field">Что проверяем (результат)<input class="t2" id="dt-res" value="${esc(DT.result)}" placeholder="Например: кнопка «Войти»"></label>
+  <section class="sec"><h2>Условия</h2>
+    <div class="box">${DT.conds.map((c,i)=>`<div class="dtc"><span class="dtn">${i+1}</span><input class="t2" data-cond="${i}" value="${esc(c)}" placeholder="Условие ${i+1}" aria-label="Условие ${i+1}"><button class="btn" data-delcond="${i}" aria-label="Удалить условие ${i+1}">✕</button></div>`).join("")}</div>
+    <div class="actions">${n<5?`<button class="btn" id="dt-add">+ Условие</button>`:""}<span class="dtcount" aria-live="polite">${plural(n,"условие","условия","условий")} → ${plural(rows.length,"тест","теста","тестов")}</span></div>
+  </section>
+  ${n?`<section class="sec"><h2>Тесты</h2><p>Цифры в шапке — номера условий выше. Впиши ожидаемый результат и отметь ✓, когда тест пройден.</p>
+  <div class="dtwrap"><table class="dt"><thead><tr><th scope="col">№</th>${DT.conds.map((c,i)=>`<th scope="col" class="cn"><span class="dtn" aria-label="${esc(c||"Условие "+(i+1))}">${i+1}</span></th>`).join("")}<th scope="col">Результат</th><th scope="col" aria-label="Пройден">✓</th></tr></thead>
+  <tbody>${rows.map((r,i)=>{const k=r.join(",");return `<tr><td class="num-c">${i+1}</td>${r.map(v=>`<td><span class="yn ${v?"y":"n"}">${v?"Да":"Нет"}</span></td>`).join("")}<td><input class="t2 dte" data-exp="${k}" value="${esc(DT.exp[k]||"")}" placeholder="результат" aria-label="Ожидаемый результат, тест ${i+1}"></td><td><input type="checkbox" class="dtd" data-done="${k}" ${DT.done[k]?"checked":""} aria-label="Тест ${i+1} пройден"></td></tr>`}).join("")}</tbody></table></div></section>`:""}
+  <div class="actions"><button class="btn primary" id="dt-copy">Копировать таблицу</button><button class="btn" id="dt-share">Поделиться</button><button class="btn" id="dt-reset">Вернуть пример</button></div>`;
+  dtResetArm=false;
+}
+function dtText(){
+  const rows=dtRows(), heads=["№",...DT.conds.map((c,i)=>c||"Условие "+(i+1)),"Ожидаемый результат"];
+  const lines=rows.map((r,i)=>[String(i+1),...r.map(v=>v?"Да":"Нет"),(DT.exp[r.join(",")]||"—")+(DT.done[r.join(",")]?" ✓":"")]);
+  const w=heads.map((h,j)=>Math.max(h.length,...lines.map(l=>l[j].length)));
+  const fmt=l=>l.map((c,j)=>c.padEnd(w[j])).join(" | ").trimEnd();
+  return `Таблица решений: ${DT.result||"<результат>"}
+Условий: ${DT.conds.length} → тестов: ${rows.length}
+
+${fmt(heads)}
+${w.map(x=>"-".repeat(x)).join("-|-")}
+${lines.map(fmt).join("\n")}`;
+}
+$("c-dt").addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="dt-res"){DT.result=t.value;saveDT();return}
+  if(t.dataset.cond!==undefined){DT.conds[+t.dataset.cond]=t.value;saveDT();const n=document.querySelectorAll(".dt thead .cn .dtn")[+t.dataset.cond];if(n)n.setAttribute("aria-label",t.value||"Условие "+(+t.dataset.cond+1));return}
+  if(t.dataset.exp!==undefined){DT.exp[t.dataset.exp]=t.value;saveDT();return}
+});
+$("c-dt").addEventListener("change",e=>{const t=e.target;if(t.dataset.done!==undefined){DT.done[t.dataset.done]=t.checked;saveDT()}});
+function dtRemap(fn){ // пересобираем ключи строк после изменения условий
+  const ne={},nd={};Object.keys(DT.exp).forEach(k=>{const nk=fn(k);if(nk)ne[nk]=DT.exp[k]});Object.keys(DT.done).forEach(k=>{const nk=fn(k);if(nk)nd[nk]=DT.done[k]});DT.exp=ne;DT.done=nd;
+}
+$("c-dt").addEventListener("click",e=>{
+  const t=e.target, del=t.closest("[data-delcond]");
+  if(t.id==="dt-add"){DT.conds.push("");dtRemap(k=>k+",1");saveDT();renderDT();const ins=document.querySelectorAll("[data-cond]");ins[ins.length-1].focus();return}
+  if(del){const i=+del.dataset.delcond;DT.conds.splice(i,1);dtRemap(k=>{const a=k.split(",");if(a[i]!=="1")return null;a.splice(i,1);return a.join(",")});saveDT();renderDT();return}
+  if(t.id==="dt-copy"){copy(dtText(),"Таблица скопирована");return}
+  if(t.id==="dt-share"){share(dtText());return}
+  if(t.id==="dt-reset"){if(!dtResetArm){dtResetArm=true;t.textContent="Точно? Всё сотрётся";return}DT=JSON.parse(JSON.stringify(DT_EXAMPLE));saveDT();renderDT();toast("Вернул пример")}
+});
 
 /* ---------- пульт ---------- */
 const APK="https://github.com/FakingFanny/WCAG/releases/latest/download/wcag.apk";
@@ -988,7 +1162,7 @@ function go(tab,sub){
   TAB=tab;
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===tab));
   ["find","check","pult","bugs","sheets"].forEach(t=>$("p-"+t).classList.toggle("on",t===tab));
-  $("title").textContent=TITLES[tab];
+  $("title").textContent=TITLES[tab]; $("title").hidden=tab==="find";
   $("hd-find").hidden=tab!=="find"; $("hd-sheets").hidden=tab!=="sheets"; $("hd-check").hidden=tab!=="check";
   if(tab==="sheets"){if(sub)SHEET=sub;renderSheet()}
   if(tab==="check"){if(sub)CHECK=sub;showCheck()}
@@ -1002,6 +1176,7 @@ window.route=function(r){
   r=(r||"").replace("#","");
   if(r==="contrast")go("check","contrast");
   else if(r==="list")go("check","list");
+  else if(r==="dt")go("check","dt");
   else if(r==="pult")go("pult");
   else if(r==="bugs")go("bugs");
   else if(["sr","zoom","wcag"].includes(r))go("sheets",r);

@@ -1,5 +1,5 @@
 // Офлайн-кэш. При изменении файлов увеличьте версию.
-const CACHE = "wcag-v5";
+const CACHE = "wcag-v6";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

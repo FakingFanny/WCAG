@@ -313,8 +313,10 @@ table.dt{border-collapse:collapse;width:100%;font-size:15px}
   <div class="bsheet" role="dialog" aria-modal="true" aria-labelledby="bug-h">
     <div class="grab"></div>
     <h2 id="bug-h">Баг-репорт</h2>
+    <label class="field">Критерий WCAG<input class="t" id="b-crit" inputmode="decimal" autocomplete="off" placeholder="Например 1.4.3 — можно оставить пустым" aria-describedby="b-crit-hint"><span class="sevhint" id="b-crit-hint">Можно оставить пустым</span></label>
     <label class="field">Где (экран и элемент)<input class="t" id="b-where" placeholder="Экран «Корзина», кнопка «Удалить»"></label>
     <label class="field">Что не так (фактический результат)<textarea id="b-fact"></textarea></label>
+    <label class="field">Ожидаемый результат<textarea id="b-exp" placeholder="Как должно быть"></textarea></label>
     <label class="field">Шаги воспроизведения<textarea id="b-steps"></textarea></label>
     <div class="field">Критичность
       <div class="sev" id="b-sev">
@@ -325,9 +327,19 @@ table.dt{border-collapse:collapse;width:100%;font-size:15px}
       </div>
       <p class="sevhint" id="b-sevhint"></p>
     </div>
-    <div class="field">Готовый текст<pre class="out" id="b-out"></pre></div>
+    <div class="field">Формат
+      <div class="sev" id="b-fmt">
+        <button data-f="text" aria-pressed="true">Текст</button>
+        <button data-f="cloud" aria-pressed="false">Jira Cloud</button>
+        <button data-f="server" aria-pressed="false">Jira Server</button>
+      </div>
+      <p class="sevhint" id="b-fmthint"></p>
+    </div>
+    <div class="field">Заголовок (Summary)<pre class="out" id="b-title"></pre></div>
+    <div class="field">Описание (Description)<pre class="out" id="b-out"></pre></div>
     <div class="actions">
-      <button class="btn primary" id="b-copy">Копировать</button>
+      <button class="btn primary" id="b-copy-title">Копировать заголовок</button>
+      <button class="btn primary" id="b-copy">Копировать описание</button>
       <button class="btn" id="b-share">Поделиться</button>
       <button class="btn" id="b-save">Сохранить</button>
       <button class="btn" id="b-del" hidden>Удалить</button>
@@ -653,61 +665,96 @@ $("tags").addEventListener("click",e=>{if(e.target.tagName==="BUTTON"){$("q").va
 
 /* ---------- баг-репорт ---------- */
 const SEV={"Блокер":"Пользователь не может выполнить задачу (например, оплатить с TalkBack).","Высокая":"Задачу выполнить очень трудно, обходной путь неочевиден.","Средняя":"Неудобно, но есть понятный обходной путь.","Низкая":"Мелкая неточность, на выполнение задачи не влияет."};
+const FMTS={text:"Обычный текст",cloud:"Jira Cloud",server:"Jira Server"};
 let BUGS=[];
 try{BUGS=JSON.parse(localStorage.getItem("bugs")||"[]")}catch(e){BUGS=[]}
 function saveBugs(){try{localStorage.setItem("bugs",JSON.stringify(BUGS))}catch(e){}}
+let FMT="text"; try{FMT=localStorage.getItem("fmt")||"text"}catch(e){}
 let bugIt=null, bugId=null, sev="Высокая", lastFocus=null, delArm=false;
 
-// pre: {where, fact, steps, sev, id}
+// crit может быть null — тогда это обычный баг без WCAG
 function openBug(crit,pre){
   pre=pre||{};
-  bugIt=byId[crit]; bugId=pre.id||null; lastFocus=document.activeElement; delArm=false;
-  $("bug-h").textContent=(bugId?"Баг · ":"Новый баг · ")+"WCAG "+bugIt.id;
+  bugIt=crit&&byId[crit]?byId[crit]:null; bugId=pre.id||null; lastFocus=document.activeElement; delArm=false;
+  $("b-crit").value=bugIt?bugIt.id:"";
   $("b-where").value=pre.where||"";
   $("b-fact").value=pre.fact||"";
-  $("b-fact").placeholder=bugIt.t?bugIt.t[1]:"Опиши, что происходит";
-  $("b-steps").value=pre.steps||("1. Открыть экран «…»\n"+(bugIt.t?bugIt.t[0].map((s,i)=>(i+2)+". "+s).join("\n"):"2. …"));
+  $("b-exp").value=pre.exp!==undefined?pre.exp:(bugIt?bugIt.how:"");
+  $("b-steps").value=pre.steps||("1. Открыть экран «…»\n"+(bugIt&&bugIt.t?bugIt.t[0].map((s,i)=>(i+2)+". "+toInf(s)).join("\n"):"2. …"));
   $("b-del").hidden=!bugId; $("b-del").textContent="Удалить";
   $("b-save").textContent=bugId?"Сохранено":"Сохранить";
-  setSev(pre.sev||sev); $("bug").hidden=false; buildBug();
-  if(!bugId)$("b-where").focus(); else $("bug-h").setAttribute("tabindex","-1"),$("bug-h").focus();
+  setFmt(FMT); setSev(pre.sev||sev); bugHead(); $("bug").hidden=false; buildBug();
+  if(!bugId)$("b-where").focus(); else {$("bug-h").setAttribute("tabindex","-1");$("bug-h").focus()}
 }
+// «Включи TalkBack» → «Включить TalkBack»: в баг-репорте шаги пишут в инфинитиве
+const INF={"Включи":"Включить","Пройди":"Пройти","Открой":"Открыть","Сделай":"Сделать","Измерь":"Измерить","Поставь":"Поставить","Найди":"Найти","Поверни":"Повернуть","Подключи":"Подключить","Вызови":"Вызвать","Отправь":"Отправить","Коснись":"Коснуться","Сравни":"Сравнить","Меняй":"Изменить","Перемещай":"Переместить","Прочитай":"Прочитать","Запусти":"Запустить","Посмотри":"Посмотреть","Проверь":"Проверить","Увеличь":"Увеличить","Отметь":"Отметить"};
+const toInf=s=>s.replace(/^([А-ЯЁ][а-яё]+)/,w=>INF[w]||w);
+function bugHead(){$("bug-h").textContent=(bugId?"Баг":"Новый баг")+(bugIt?" · WCAG "+bugIt.id:"");$("b-fact").placeholder=bugIt&&bugIt.t?bugIt.t[1]:"Опиши, что происходит"}
 function closeBug(){ $("bug").hidden=true; if(lastFocus&&document.contains(lastFocus))lastFocus.focus(); if(TAB==="bugs")renderBugs(); }
 function setSev(v){sev=v;document.querySelectorAll("#b-sev button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v));$("b-sevhint").textContent=SEV[v];buildBug()}
-function bugText(b){
-  const it=byId[b.crit], where=b.where||"<экран, элемент>", fact=b.fact||(it.t?it.t[1]:"<что не так>");
-  return `[A11y] ${where}: ${fact.split(/\n|\.\s/)[0]}
+function setFmt(v){FMT=v;try{localStorage.setItem("fmt",v)}catch(e){}document.querySelectorAll("#b-fmt button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===v));$("b-fmthint").textContent={text:"Для Telegram, почты и любых трекеров.",cloud:"Markdown: Jira Cloud превращает его в заголовки и списки при вставке.",server:"Wiki-разметка: для Jira Server и Data Center."}[v];buildBug()}
 
-Критерий: WCAG 2.2 ${it.id} ${it.en} (${it.ru}), уровень ${it.l}
-Критичность: ${b.sev}
-Окружение: ${b.env||device()}
-
-Шаги:
-${(b.steps||"").trim()}
-
-Фактический результат:
-${fact}
-
-Ожидаемый результат:
-${it.how}
-
-Ссылка: https://www.w3.org/WAI/WCAG22/Understanding/${slug(it.en)}`;
+function bugTitle(b){
+  const it=b.crit?byId[b.crit]:null, where=b.where||"<экран, элемент>", fact=b.fact||(it&&it.t?it.t[1]:"<что не так>");
+  return `${it?"[A11y] ":""}${where}: ${fact.split(/\n|\.\s/)[0]}`;
 }
+function bugBody(b,fmt){
+  const it=b.crit?byId[b.crit]:null;
+  const fact=b.fact||(it&&it.t?it.t[1]:"<что не так>");
+  const exp=b.exp||(it?it.how:"<как должно быть>");
+  const steps=(b.steps||"").split("\n").map(s=>s.replace(/^\s*\d+[.)]\s*/,"").trim()).filter(Boolean);
+  const url=it?`https://www.w3.org/WAI/WCAG22/Understanding/${slug(it.en)}`:"";
+  const crit=it?`WCAG 2.2 ${it.id} ${it.en} (${it.ru}), уровень ${it.l}`:"";
+  const env=b.env||device();
+  if(fmt==="server") return [
+    `*Окружение:* ${env}`, ...(crit?[`*Критерий:* [${crit}|${url}]`]:[]), `*Критичность:* ${b.sev}`,"",
+    "h3. Шаги воспроизведения", ...steps.map(s=>"# "+s),"",
+    "h3. Фактический результат", fact,"",
+    "h3. Ожидаемый результат", exp,"",
+    "h3. Вложения","Скриншот / видео: "
+  ].join("\n").replace(/\n{3,}/g,"\n\n");
+  if(fmt==="cloud") return [
+    `**Окружение:** ${env}`, ...(crit?[`**Критерий:** [${crit}](${url})`]:[]), `**Критичность:** ${b.sev}`,"",
+    "### Шаги воспроизведения", ...steps.map((s,i)=>`${i+1}. ${s}`),"",
+    "### Фактический результат", fact,"",
+    "### Ожидаемый результат", exp,"",
+    "### Вложения","Скриншот / видео: "
+  ].join("\n").replace(/\n{3,}/g,"\n\n");
+  return [
+    ...(crit?[`Критерий: ${crit}`]:[]), `Критичность: ${b.sev}`, `Окружение: ${env}`,"",
+    "Шаги:", ...steps.map((s,i)=>`${i+1}. ${s}`),"",
+    "Фактический результат:", fact,"",
+    "Ожидаемый результат:", exp, url?"\nСсылка: "+url:"","",
+    "Вложения: скриншот / видео"
+  ].join("\n").replace(/\n{3,}/g,"\n\n");
+}
+function bugText(b,fmt){fmt=fmt||FMT;const t=bugTitle(b);return (fmt==="server"?"h2. "+t:fmt==="cloud"?"## "+t:t)+"\n\n"+bugBody(b,fmt)}
 function curBug(){
   const old=bugId?BUGS.find(b=>b.id===bugId):null;
-  return {id:bugId,crit:bugIt.id,where:$("b-where").value.trim(),fact:$("b-fact").value.trim(),steps:$("b-steps").value,sev,env:old?old.env:device(),time:old?old.time:Date.now()};
+  return {id:bugId,crit:bugIt?bugIt.id:null,where:$("b-where").value.trim(),fact:$("b-fact").value.trim(),exp:$("b-exp").value.trim(),steps:$("b-steps").value,sev,env:old?old.env:device(),time:old?old.time:Date.now()};
 }
-function buildBug(){ if(bugIt){$("b-out").textContent=bugText(curBug()); if(bugId)$("b-save").textContent="Сохранить";} }
+function buildBug(){
+  const b=curBug(); $("b-title").textContent=bugTitle(b); $("b-out").textContent=bugBody(b,FMT);
+  if(bugId)$("b-save").textContent="Сохранить";
+}
 function storeBug(){
   const b=curBug();
   if(!b.id){b.id=Date.now();bugId=b.id;BUGS.unshift(b)}
   else{const i=BUGS.findIndex(x=>x.id===b.id); if(i>=0)BUGS[i]=b; else BUGS.unshift(b)}
-  saveBugs(); $("b-del").hidden=false; $("b-save").textContent="Сохранено"; $("bug-h").textContent="Баг · WCAG "+bugIt.id;
+  saveBugs(); $("b-del").hidden=false; $("b-save").textContent="Сохранено"; bugHead();
 }
-["b-where","b-fact","b-steps"].forEach(id=>$(id).addEventListener("input",buildBug));
+$("b-crit").addEventListener("input",e=>{
+  const v=e.target.value.trim(); const it=byId[v]||null;
+  const hadHow=bugIt&&$("b-exp").value===bugIt.how;
+  if(it!==bugIt){bugIt=it; if(it&&($("b-exp").value===""||hadHow))$("b-exp").value=it.how; if(!it&&hadHow)$("b-exp").value=""; bugHead(); buildBug()}
+  $("b-crit-hint").textContent=v&&!it?"Нет такого критерия — проверь номер":(it?it.ru+" · "+it.l:"Можно оставить пустым");
+});
+["b-where","b-fact","b-steps","b-exp"].forEach(id=>$(id).addEventListener("input",buildBug));
 $("b-sev").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setSev(b.dataset.v)});
-$("b-copy").onclick=()=>{storeBug();copy($("b-out").textContent,"Баг скопирован и сохранён")};
-$("b-share").onclick=()=>{storeBug();share($("b-out").textContent)};
+$("b-fmt").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setFmt(b.dataset.f)});
+$("b-copy-title").onclick=()=>{storeBug();copy($("b-title").textContent,"Заголовок скопирован — вставь в Summary")};
+$("b-copy").onclick=()=>{storeBug();copy($("b-out").textContent,FMT==="text"?"Описание скопировано":"Описание скопировано — вставь в Description")};
+$("b-share").onclick=()=>{storeBug();share(bugText(curBug()))};
 $("b-save").onclick=()=>{storeBug();toast("Сохранено в «Баги»")};
 $("b-del").onclick=()=>{
   if(!delArm){delArm=true;$("b-del").textContent="Точно удалить?";return}
@@ -715,6 +762,8 @@ $("b-del").onclick=()=>{
 };
 $("b-close").onclick=closeBug;
 $("bug").addEventListener("click",e=>{if(e.target.id==="bug")closeBug()});
+// пустой шаблон для любого бага
+function blankTemplate(fmt){return bugText({crit:null,where:"<экран, элемент>",fact:"<что происходит>",exp:"<как должно быть>",steps:"1. <шаг>\n2. <шаг>\n3. <шаг>",sev:"<Блокер / Высокая / Средняя / Низкая>",env:device()},fmt)}
 
 /* ---------- контраст ---------- */
 function hex(v){v=v.trim().replace(/^#/,"");if(/^[0-9a-f]{3}$/i.test(v))v=v.split("").map(c=>c+c).join("");return /^[0-9a-f]{6}$/i.test(v)?"#"+v.toLowerCase():null}
@@ -1139,17 +1188,21 @@ $("pult").addEventListener("click",e=>{
 window.onNative=function(){ if(TAB==="pult")renderPult(); };
 
 /* ---------- мои баги ---------- */
-function bugsAll(){return BUGS.map(bugText).join("\n\n────────\n\n")}
+function bugsAll(){return BUGS.map(b=>bugText(b)).join(FMT==="server"?"\n\n----\n\n":"\n\n────────\n\n")}
 function renderBugs(){
-  if(!BUGS.length){$("bugs").innerHTML=`<p class="empty">Здесь появятся баги, которые ты заведёшь.<br>Открой критерий → «Завести баг».</p>`;return}
-  $("bugs").innerHTML=`<div class="actions"><button class="btn primary" id="bg-copy">Копировать все (${BUGS.length})</button><button class="btn" id="bg-share">Поделиться</button></div>
-  <div class="box">${BUGS.map(b=>{const it=byId[b.crit];const d=new Date(b.time);return `<button class="bi" data-openbug="${b.id}">
-    <span class="bh"><b>${b.crit}</b><span class="lvl ${it.l}">${it.l}</span><span class="sevp">${b.sev}</span><span>${d.toLocaleDateString("ru-RU")} ${d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}</span></span>
-    <span style="font-weight:700">${esc(b.where||it.ru)}</span>
-    <span class="bf">${esc(b.fact||(it.t?it.t[1]:""))}</span></button>`}).join("")}</div>`;
+  const top=`<div class="actions"><button class="btn primary" id="bg-new">+ Новый баг</button><button class="btn" id="bg-blank">Пустой шаблон</button></div>
+  <p class="sevhint">Новый баг можно завести и без критерия WCAG — для любой ошибки. Формат (текст или Jira) выбирается внутри.</p>`;
+  if(!BUGS.length){$("bugs").innerHTML=top+`<p class="empty">Здесь появятся баги, которые ты заведёшь.<br>Из карточки критерия — кнопка «Завести баг».</p>`;return}
+  $("bugs").innerHTML=top+`<div class="actions"><button class="btn" id="bg-copy">Копировать все (${BUGS.length})</button><button class="btn" id="bg-share">Поделиться</button></div>
+  <div class="box">${BUGS.map(b=>{const it=b.crit?byId[b.crit]:null;const d=new Date(b.time);return `<button class="bi" data-openbug="${b.id}">
+    <span class="bh">${it?`<b>${b.crit}</b><span class="lvl ${it.l}">${it.l}</span>`:`<b>Баг</b>`}<span class="sevp">${esc(b.sev)}</span><span>${d.toLocaleDateString("ru-RU")} ${d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}</span></span>
+    <span style="font-weight:700">${esc(b.where||(it?it.ru:"Без названия"))}</span>
+    <span class="bf">${esc(b.fact||(it&&it.t?it.t[1]:""))}</span></button>`}).join("")}</div>`;
 }
 $("bugs").addEventListener("click",e=>{
   const o=e.target.closest("[data-openbug]"); if(o){const b=BUGS.find(x=>String(x.id)===o.dataset.openbug);if(b)openBug(b.crit,b);return}
+  if(e.target.id==="bg-new"){openBug(null,{steps:"1. Открыть экран «…»\n2. …"});return}
+  if(e.target.id==="bg-blank"){copy(blankTemplate(FMT),"Пустой шаблон скопирован ("+FMTS[FMT]+")");return}
   if(e.target.id==="bg-copy"){copy(bugsAll(),"Все баги скопированы");return}
   if(e.target.id==="bg-share"){share(bugsAll())}
 });
